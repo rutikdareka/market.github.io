@@ -1,1 +1,239 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrackMoney</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body class="text-white">
+
+    <nav class="navbar">
+        <div class="navbar-container">
+            <h1 class="navbar-logo">TrackMoney</h1>
+            <div class="navbar-actions">
+                <button class="navbar-btn" id="signInBtn" onclick="toggleSignInOverlay()">Sign In</button>
+                <button class="navbar-icon" onclick="toggleSearchOverlay()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M21 21l-4.35-4.35m2.85-5.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sign In Overlay -->
+    <div class="sign-in-overlay" id="signInOverlay">
+        <div class="sign-in-form">
+            <h2>Sign In</h2>
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button class="sign-in-btn" onclick="handleSignIn()">Sign In</button>
+        </div>
+    </div>
+
+    <!-- Landing Page (Shown if not signed in) -->
+    <div class="landing-page" id="landingPage">
+        <h1 class="landing-title">Welcome to TrackMoney</h1>
+        <p class="landing-subtitle">Your ultimate tool to track, analyze, and profit from stock trading with real-time
+            insights.</p>
+        <a href="#" class="landing-btn" onclick="toggleSignInOverlay()">Get Started</a>
+    </div>
+
+    <!-- Main App Content (Shown after sign in) -->
+    <div id="appContent" class="hidden">
+        <!-- Splash Screen -->
+        <div class="splash-screen" id="splashScreen">
+            <div class="splash-logo">
+                <div class="logo-symbol">
+                    <div class="logo-circle"></div>
+                    <div class="splash-icon">
+                        <div class="logo-text">TrackMoney</div>
+                    </div>
+                </div>
+            </div>
+            <div class="splash-subtitle">Track. Analyze. Profit.</div>
+        </div>
+
+        <!-- Loader -->
+        <div class="loader-container" id="loaderContainer">
+            <span class="loader"></span>
+        </div>
+
+        <!-- Search Overlay -->
+        <div id="searchOverlay" class="search-overlay">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold">Search</h2>
+                <button class="text-gray-400" onclick="toggleSearchOverlay()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="rou   nd" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <input type="text" placeholder="Search..." onkeyup="updateSearch(event)"
+                class="w-full p-2 bg-gray-800 text-white rounded">
+            <p id="searchMessage" class="text-gray-400 mt-2">Search your activity ex (profit,loss,name,status)</p>
+            <div id="activityListI" class="activity-list"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex flex-col items-center mt-8 p-4 tab-container">
+            <div class="flex flex-wrap justify-center gap-4">
+                <button class="tab-button active" onclick="openTab('intraday', this)">Intraday</button>
+                <button class="tab-button" onclick="openTab('holding', this)">Holding</button>
+                <button class="tab-button" onclick="openTab('activity', this)">Activity</button>
+            </div>
+        </div>
+
+        <!-- Intraday Tab -->
+        <div id="intraday" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center">
+            <div class="w-[500px]">
+                <div class="w-[450px] mb-2.5 flex justify-end items-center">
+                    <button class="new-button" onmousedown="this.style.transform='scale(0.9)';"
+                        onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';"
+                        onclick="toggleTradePanel('intraday')">
+                        New Trade
+                    </button>
+                </div>
+                <div class="info-section">
+                    <span class="t-sec"><b>Invested</b>
+                        <div></div><b class="mt-1">₹0.00</b>
+                    </span>
+                    <span>
+                        <div class="t-sec"><b>Current</b>
+                            <div></div><b class="mt-1">₹0.00</b>
+                        </div>
+                    </span>
+                    <span>
+                        <div class="t-sec"><b>Total P/L</b>
+                            <div></div><b class="mt-1">₹0.00 (0%)</b>
+                        </div>
+                    </span>
+                </div>
+                <div class="activity-section" id="intradayActivity"></div>
+            </div>
+        </div>
+
+        <!-- Holding Tab -->
+        <div id="holding" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center hidden">
+            <div class="w-[500px]">
+                <div class="w-[450px] mb-2.5 flex justify-end items-center">
+                    <button class="new-button" onmousedown="this.style.transform='scale(0.9)';"
+                        onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';"
+                        onclick="toggleTradePanel('holding')">
+                        Add Holding
+                    </button>
+                </div>
+                <div class="info-section">
+                    <span class="t-sec"><b>Invested</b>
+                        <div></div><b class="mt-1">₹0.00</b>
+                    </span>
+                    <span>
+                        <div class="t-sec"><b>Current</b>
+                            <div></div><b class="mt-1">₹0.00</b>
+                        </div>
+                    </span>
+                    <span>
+                        <div class="t-sec"><b>Total P/L</b>
+                            <div></div><b class="mt-1">₹0.00 (0%)</b>
+                        </div>
+                    </span>
+                </div>
+                <div class="activity-section" id="holdingActivity"></div>
+            </div>
+        </div>
+
+        <!-- Activity Tab -->
+        <div id="activity" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center hidden">
+            <div class="w-[500px]">
+                <div class="info-section">
+                    <span class="t-sec"><b>Total Trades</b>
+                        <div></div><b class="mt-1">0</b>
+                    </span>
+                    <span>
+                        <div class="t-sec"><b>Completed</b>
+                            <div></div><b class="mt-1">0</b>
+                        </div>
+                    </span>
+                    <span>
+                        <div class="t-sec"><b>Net P/L</b>
+                            <div></div><b class="mt-1">₹0.00 (0%)</b>
+                        </div>
+                    </span>
+                </div>
+                <div class="activity-section" id="activityList"></div>
+            </div>
+        </div>
+
+        <!-- Trade Overlay -->
+        <div id="tradeOverlay" class="overlay" onclick="closeTradePanel(event)">
+            <div id="tradePanel" class="trade-panel" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold" id="tradePanelTitle">New Trade</h2>
+                </div>
+                <!-- Inside the tradeOverlay form -->
+                <form id="tradeForm" class="space-y-4">
+                    <div class="input-group flex-1">
+                        <label class="block text-sm font-medium mb-2 text-gray-300">Stock Symbol</label>
+                        <div class="relative">
+                            <input type="text" id="stockSymbol" placeholder="e.g., RELIANCE" class="search-input w-full"
+                                required onkeyup="callapi(event)" autocomplete="off">
+                        </div>
+                    </div>
+                    <div id="searchResultsContainer" class="search-results-container absolute hidden">
+                        <ul id="searchResults" class="py-1"></ul>
+                    </div>
+                    <div class="flex gap-4">
+
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Quantity</label>
+                            <input type="number" id="quantity" placeholder="Qty" class="search-input w-full" required
+                                min="1">
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Latest Price (₹)</label>
+                            <input type="text" id="price" placeholder="Auto" class="search-input w-full" disabled>
+                        </div>
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Buy at Price (₹)</label>
+                            <input type="number" id="buyAtPrice" placeholder="Optional" class="search-input w-full"
+                                step="0.01">
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Stop Loss (₹)</label>
+                            <input type="number" id="stopLoss" placeholder="SL" class="search-input w-full" step="0.01">
+                        </div>
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Target Profit (₹)</label>
+                            <input type="number" id="targetProfit" placeholder="TP" class="search-input w-full"
+                                step="0.01">
+                        </div>
+                    </div>
+                    <div class="flex gap-4 justify-center mt-6">
+                        <button type="button" class="trade-btn buy-btn"
+                            onclick="handleTradeSubmit(document.getElementById('tradePanelTitle').textContent.includes('Holding') ? 'holding' : 'intraday', true)">Buy</button>
+                        <button type="button" class="trade-btn sell-btn"
+                            onclick="handleTradeSubmit(document.getElementById('tradePanelTitle').textContent.includes('Holding') ? 'holding' : 'intraday', false)">Sell</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+<script src="script.js"></script>
+
+</html>
