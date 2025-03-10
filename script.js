@@ -427,10 +427,10 @@ function formatISTTime(date) {
 
 // Fix handleTradeSubmit
 function handleTradeSubmit(type, isBuy) {
-    if (!isMarketOpen()) {
-        alert(`Market is closed! Trading is allowed only between 9:15 AM and 3:30 PM IST. Current IST: ${formatISTTime(new Date())}`);
-        return;
-    }
+    // if (!isMarketOpen()) {
+    //     alert(`Market is closed! Trading is allowed only between 9:15 AM and 3:30 PM IST. Current IST: ${formatISTTime(new Date())}`);
+    //     return;
+    // }
 
     const stockSymbolInput = document.getElementById("stockSymbol");
     const stockSymbol = stockSymbolInput.value.toUpperCase();
