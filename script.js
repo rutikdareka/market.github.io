@@ -424,20 +424,18 @@ function formatISTTime(date) {
     return date.toLocaleTimeString('en-IN', options);
 }
 
-
-// Fix handleTradeSubmit
 function handleTradeSubmit(type, isBuy) {
-    // if (!isMarketOpen()) {
-    //     alert(`Market is closed! Trading is allowed only between 9:15 AM and 3:30 PM IST. Current IST: ${formatISTTime(new Date())}`);
-    //     return;
-    // }
+    if (!isMarketOpen()) {
+        alert(`Market is closed! Trading is allowed only between 9:15 AM and 3:30 PM IST. Current IST: ${formatISTTime(new Date())}`);
+        return;
+    }
 
     const stockSymbolInput = document.getElementById("stockSymbol");
     const stockSymbol = stockSymbolInput.value.toUpperCase();
     const stockName = stockSymbolInput.dataset.stockName || stockSymbol;
     const quantity = document.getElementById("quantity").value;
     const priceInput = document.getElementById("price");
-    const buyAtPrice = parseFloat(document.getElementById("buyAtPrice").value) || 0;
+    const buyAtPrice = parseFloat(document.getElementById("buyAtPrice").value) || 0; // New field
     const stopLoss = parseFloat(document.getElementById("stopLoss").value) || 0;
     const targetProfit = parseFloat(document.getElementById("targetProfit").value) || 0;
 
@@ -449,8 +447,9 @@ function handleTradeSubmit(type, isBuy) {
     showLoader();
     fetchLatestPrice(stockSymbol).then(latestPrice => {
         if (latestPrice) {
+            // Use buyAtPrice if provided and it's a buy trade, otherwise use latestPrice
             const effectiveBuyPrice = (isBuy && buyAtPrice > 0) ? buyAtPrice : latestPrice;
-            priceInput.value = formatIndianNumber(latestPrice);
+            priceInput.value = formatIndianNumber(latestPrice); // Show latest price regardless
 
             const tradeData = {
                 symbol: stockSymbol,
@@ -465,14 +464,20 @@ function handleTradeSubmit(type, isBuy) {
                 completed: false,
                 stopLoss: stopLoss,
                 targetProfit: targetProfit,
-                buyAtPrice: isBuy ? buyAtPrice : 0
+                buyAtPrice: isBuy ? buyAtPrice : 0 // Store buyAtPrice for reference
             };
 
-            activeTrades.push(tradeData);
-            localStorage.setItem('trades', JSON.stringify(activeTrades));
-            console.log('Trade added:', tradeData);
-            console.log('Updated activeTrades:', activeTrades);
+            const oppositeTrade = activeTrades.find(t => t.symbol === stockSymbol && t.type === type && t.action !== tradeData.action && !t.completed);
+            if (oppositeTrade) {
+                oppositeTrade.completed = true;
+                oppositeTrade.price_sell = !isBuy ? latestPrice : oppositeTrade.price_sell;
+                oppositeTrade.price_buy = isBuy ? effectiveBuyPrice : oppositeTrade.price_buy;
+                tradeData.completed = true;
+            } else {
+                activeTrades.push(tradeData);
+            }
 
+            localStorage.setItem('trades', JSON.stringify(activeTrades));
             if (type === 'intraday') updateIntradaySection();
             else updateHoldingSection();
             updateActivitySection();
@@ -487,17 +492,6 @@ function handleTradeSubmit(type, isBuy) {
         hideLoader();
     });
 }
-
-// Fix closeTradePanel
-function closeTradePanel(event) {
-    const overlay = document.getElementById("tradeOverlay");
-    const panel = document.getElementById("tradePanel");
-    if (!panel.contains(event.target) || event.target.tagName === 'BUTTON') {
-        overlay.classList.remove("open");
-        panel.classList.remove("open");
-    }
-}
-
 
 function checkIntradayAutoClose() {
     const now = new Date();
