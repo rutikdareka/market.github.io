@@ -173,7 +173,7 @@ function startPriceUpdates() {
 
                             if (isMarketOpen() && !trade.completed) {
                                 if (trade.action === 'BUY') {
-                                    if (trade.stopLoss > 0 && price <= trade.stopLoss) {
+                                    if (trade.stopLoss > 0 && price == trade.stopLoss) {
                                         trade.completed = true;
                                         trade.price_sell = price;
                                         trade.timestamp_close = new Date().toISOString();
