@@ -855,7 +855,7 @@ function startPriceUpdates() {
 
                             // Check SL and TP here to ensure it runs
                             if (isMarketOpen() && !trade.completed) {
-                                if (trade.stopLoss > 0 && price <= trade.stopLoss) {
+                                if (trade.stopLoss > 0 && price >= trade.stopLoss) {
                                     trade.completed = true;
                                     trade.price_sell = price;
                                     trade.timestamp_close = new Date().toISOString();
