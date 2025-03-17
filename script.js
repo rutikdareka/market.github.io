@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function hideSplashScreen() {
-    setTimeout(() => document.getElementById('splashScreen')?.classList.add('hide-splash'), 500);
+    setTimeout(() => document.getElementById('splashScreen')?.classList.add('hide-splash'), 2000);
 }
 
 function showLoader() { document.getElementById('loaderContainer')?.classList.add('show'); }
