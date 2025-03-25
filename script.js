@@ -227,6 +227,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Update DOMContentLoaded to initialize charts
 document.addEventListener('DOMContentLoaded', () => {
     if (isSignedIn) {
         document.getElementById('landingPage').classList.add('hidden');
@@ -238,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('appContent').classList.add('hidden');
     }
     hideSplashScreen();
+    initializeCharts(); // Initialize charts here
     startPriceUpdates();
     activeTrades = JSON.parse(localStorage.getItem('trades') || '[]');
     updateIntradaySection();
