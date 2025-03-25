@@ -1314,4 +1314,259 @@ async function fetchLatestPrice(symbol) {
     }
 }
 
+// Chart variables
+let intradayChart, holdingChart, activityChart;
 
+// Initialize charts
+function initializeCharts() {
+    const intradayCtx = document.getElementById('intradayChart')?.getContext('2d');
+    const holdingCtx = document.getElementById('holdingChart')?.getContext('2d');
+    const activityCtx = document.getElementById('activityChart')?.getContext('2d');
+
+    if (intradayCtx) {
+        intradayChart = new Chart(intradayCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Invested', 'Current', 'P&L'],
+                datasets: [{
+                    label: 'Intraday Overview',
+                    data: [0, 0, 0],
+                    backgroundColor: ['#4B5EAA', '#10B981', '#F59E0B'],
+                    borderColor: ['#4B5EAA', '#10B981', '#F59E0B'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#D1D5DB',
+                            callback: function(value) {
+                                return formatIndianNumber(value);
+                            }
+                        },
+                        grid: { color: '#374151' }
+                    },
+                    x: {
+                        ticks: { color: '#D1D5DB' },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${formatIndianNumber(context.raw)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    if (holdingCtx) {
+        holdingChart = new Chart(holdingCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Invested', 'Current', 'P&L'],
+                datasets: [{
+                    label: 'Holding Overview',
+                    data: [0, 0, 0],
+                    backgroundColor: ['#4B5EAA', '#10B981', '#F59E0B'],
+                    borderColor: ['#4B5EAA', '#10B981', '#F59E0B'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#D1D5DB',
+                            callback: function(value) {
+                                return formatIndianNumber(value);
+                            }
+                        },
+                        grid: { color: '#374151' }
+                    },
+                    x: {
+                        ticks: { color: '#D1D5DB' },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${formatIndianNumber(context.raw)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    if (activityCtx) {
+        activityChart = new Chart(activityCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Net P&L Over Time',
+                    data: [],
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#D1D5DB',
+                            callback: function(value) {
+                                return formatIndianNumber(value, true);
+                            }
+                        },
+                        grid: { color: '#374151' }
+                    },
+                    x: {
+                        ticks: { color: '#D1D5DB' },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: true, labels: { color: '#D1D5DB' } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `P&L: ${formatIndianNumber(context.raw, true)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Update chart data
+function updateIntradayChart(invested, current, pnl) {
+    if (intradayChart) {
+        intradayChart.data.datasets[0].data = [invested, current, pnl];
+        intradayChart.data.datasets[0].backgroundColor = ['#4B5EAA', '#10B981', pnl >= 0 ? '#10B981' : '#EF4444'];
+        intradayChart.data.datasets[0].borderColor = ['#4B5EAA', '#10B981', pnl >= 0 ? '#10B981' : '#EF4444'];
+        intradayChart.update();
+    }
+}
+
+function updateHoldingChart(invested, current, pnl) {
+    if (holdingChart) {
+        holdingChart.data.datasets[0].data = [invested, current, pnl];
+        holdingChart.data.datasets[0].backgroundColor = ['#4B5EAA', '#10B981', pnl >= 0 ? '#10B981' : '#EF4444'];
+        holdingChart.data.datasets[0].borderColor = ['#4B5EAA', '#10B981', pnl >= 0 ? '#10B981' : '#EF4444'];
+        holdingChart.update();
+    }
+}
+
+function updateActivityChart() {
+    if (activityChart) {
+        const completedTrades = activeTrades.filter(t => t.completed).sort((a, b) => new Date(a.timestamp_close) - new Date(b.timestamp_close));
+        const labels = completedTrades.map(t => new Date(t.timestamp_close).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' }));
+        const data = completedTrades.map(trade => {
+            const isShort = trade.action === 'SELL';
+            const buyAmount = trade.price_buy * trade.quantity;
+            const sellAmount = trade.price_sell * trade.quantity;
+            return isShort ? (sellAmount - buyAmount) : (sellAmount - buyAmount);
+        });
+
+        activityChart.data.labels = labels.length ? labels : ['No Data'];
+        activityChart.data.datasets[0].data = data.length ? data : [0];
+        activityChart.update();
+    }
+}
+
+// Modify existing update functions to include chart updates
+function updateIntradaySummary(invested, current, pnl) {
+    const investedEl = document.querySelector('#intraday .info-section span:nth-child(1) b:last-child');
+    const currentEl = document.querySelector('#intraday .info-section span:nth-child(2) b:last-child');
+    const pnlEl = document.querySelector('#intraday .info-section span:nth-child(3) b:last-child');
+
+    const prevInvested = parseFloat(investedEl.textContent.replace('₹', '')) || 0;
+    const prevCurrent = parseFloat(currentEl.textContent.replace('₹', '')) || 0;
+
+    animateValue(investedEl, prevInvested, invested, 300);
+    animateValue(currentEl, prevCurrent, current, 300);
+
+    const pnlPercentage = invested > 0 ? ((pnl / invested) * 100).toFixed(2) : 0;
+    pnlEl.textContent = `${pnl >= 0 ? '+' : '-'}₹${Math.abs(pnl).toFixed(2)} (${pnlPercentage}%)`;
+    pnlEl.className = pnl >= 0 ? 'profit mt-1' : 'loss mt-1';
+    pnlEl.classList.add('number-animate');
+    setTimeout(() => pnlEl.classList.remove('number-animate'), 300);
+
+    updateIntradayChart(invested, current, pnl);
+}
+
+function updateHoldingSummary(invested, current, pnl) {
+    const investedEl = document.querySelector('#holding .info-section span:nth-child(1) b:last-child');
+    const currentEl = document.querySelector('#holding .info-section span:nth-child(2) b:last-child');
+    const pnlEl = document.querySelector('#holding .info-section span:nth-child(3) b:last-child');
+
+    const prevInvested = parseFloat(investedEl.textContent.replace('₹', '')) || 0;
+    const prevCurrent = parseFloat(currentEl.textContent.replace('₹', '')) || 0;
+
+    animateValue(investedEl, prevInvested, invested, 300);
+    animateValue(currentEl, prevCurrent, current, 300);
+
+    const pnlPercentage = invested > 0 ? ((pnl / invested) * 100).toFixed(2) : 0;
+    const sign = pnl >= 0 ? '+' : '-';
+    pnlEl.textContent = `${sign}₹${Math.abs(pnl).toFixed(2)} (${pnlPercentage}%)`;
+    pnlEl.className = pnl >= 0 ? 'profit mt-1' : 'loss mt-1';
+    pnlEl.classList.add('number-animate');
+    setTimeout(() => pnlEl.classList.remove('number-animate'), 300);
+
+    updateHoldingChart(invested, current, pnl);
+}
+
+function updateActivitySummary(totalTrades, completedTrades, netPL, netPLPercentage) {
+    document.querySelector('#activity .info-section span:nth-child(1) b:last-child').textContent = totalTrades;
+    document.querySelector('#activity .info-section span:nth-child(2) b:last-child').textContent = completedTrades;
+    const pnlElement = document.querySelector('#activity .info-section span:nth-child(3) b:last-child');
+    pnlElement.textContent = `₹${Math.abs(netPL).toFixed(2)} (${netPLPercentage}%)`;
+    pnlElement.className = netPL >= 0 ? 'profit mt-1' : 'loss mt-1';
+
+    updateActivityChart();
+}
+
+// Update DOMContentLoaded to initialize charts
+document.addEventListener('DOMContentLoaded', () => {
+    if (isSignedIn) {
+        document.getElementById('landingPage').classList.add('hidden');
+        document.getElementById('appContent').classList.remove('hidden');
+        document.getElementById('signInBtn').textContent = 'Sign Out';
+        document.getElementById('signInBtn').onclick = handleSignOut;
+    } else {
+        document.getElementById('landingPage').classList.remove('hidden');
+        document.getElementById('appContent').classList.add('hidden');
+    }
+    hideSplashScreen();
+    initializeCharts(); // Initialize charts here
+    startPriceUpdates();
+    activeTrades = JSON.parse(localStorage.getItem('trades') || '[]');
+    updateIntradaySection();
+    updateHoldingSection();
+    updateActivitySection();
+});
