@@ -1319,6 +1319,24 @@ async function fetchLatestPrice(symbol) {
 // Chart variables
 let intradayChart, holdingChart, activityChart;
 
+// Base configuration for line charts
+const baseChartConfig = {
+    type: 'line',
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: true, ticks: { color: '#D1D5DB' }, grid: { color: '#374151' } },
+            x: { ticks: { color: '#D1D5DB' }, grid: { display: false } }
+        },
+        plugins: {
+            legend: { display: false }, // Hide legend to simplify
+            tooltip: { enabled: true }  // Keep tooltips for usability
+        },
+        animation: false // Disable animations to reduce lag
+    }
+};
+
 // Initialize charts
 function initializeCharts() {
     const intradayCtx = document.getElementById('intradayChart')?.getContext('2d');
@@ -1327,160 +1345,68 @@ function initializeCharts() {
 
     if (intradayCtx) {
         intradayChart = new Chart(intradayCtx, {
-            type: 'bar',
+            ...baseChartConfig,
             data: {
                 labels: ['Invested', 'Current', 'P&L'],
                 datasets: [{
-                    label: 'Intraday Overview',
+                    label: 'Intraday',
                     data: [0, 0, 0],
-                    backgroundColor: ['#4B5EAA', '#10B981', '#F59E0B'],
-                    borderColor: ['#4B5EAA', '#10B981', '#F59E0B'],
-                    borderWidth: 1
+                    borderColor: '#10B981',
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 3
                 }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: '#D1D5DB',
-                            callback: function(value) {
-                                return formatIndianNumber(value);
-                            }
-                        },
-                        grid: { color: '#374151' }
-                    },
-                    x: {
-                        ticks: { color: '#D1D5DB' },
-                        grid: { display: false }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ${formatIndianNumber(context.raw)}`;
-                            }
-                        }
-                    }
-                }
             }
         });
     }
 
     if (holdingCtx) {
         holdingChart = new Chart(holdingCtx, {
-            type: 'bar',
+            ...baseChartConfig,
             data: {
                 labels: ['Invested', 'Current', 'P&L'],
                 datasets: [{
-                    label: 'Holding Overview',
+                    label: 'Holding',
                     data: [0, 0, 0],
-                    backgroundColor: ['#4B5EAA', '#10B981', '#F59E0B'],
-                    borderColor: ['#4B5EAA', '#10B981', '#F59E0B'],
-                    borderWidth: 1
+                    borderColor: '#4B5EAA',
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 3
                 }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: '#D1D5DB',
-                            callback: function(value) {
-                                return formatIndianNumber(value);
-                            }
-                        },
-                        grid: { color: '#374151' }
-                    },
-                    x: {
-                        ticks: { color: '#D1D5DB' },
-                        grid: { display: false }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ${formatIndianNumber(context.raw)}`;
-                            }
-                        }
-                    }
-                }
             }
         });
     }
 
     if (activityCtx) {
         activityChart = new Chart(activityCtx, {
-            type: 'line',
+            ...baseChartConfig,
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'Net P&L Over Time',
+                    label: 'Net P&L',
                     data: [],
-                    borderColor: '#10B981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                    fill: true,
-                    tension: 0.3
+                    borderColor: '#F59E0B',
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 2
                 }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: '#D1D5DB',
-                            callback: function(value) {
-                                return formatIndianNumber(value, true);
-                            }
-                        },
-                        grid: { color: '#374151' }
-                    },
-                    x: {
-                        ticks: { color: '#D1D5DB' },
-                        grid: { display: false }
-                    }
-                },
-                plugins: {
-                    legend: { display: true, labels: { color: '#D1D5DB' } },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `P&L: ${formatIndianNumber(context.raw, true)}`;
-                            }
-                        }
-                    }
-                }
             }
         });
     }
 }
 
-// Update chart data
+// Update chart data (simplified)
 function updateIntradayChart(invested, current, pnl) {
     if (intradayChart) {
         intradayChart.data.datasets[0].data = [invested, current, pnl];
-        intradayChart.data.datasets[0].backgroundColor = ['#4B5EAA', '#10B981', pnl >= 0 ? '#10B981' : '#EF4444'];
-        intradayChart.data.datasets[0].borderColor = ['#4B5EAA', '#10B981', pnl >= 0 ? '#10B981' : '#EF4444'];
-        intradayChart.update();
+        intradayChart.update('none'); // No animation for faster updates
     }
 }
 
 function updateHoldingChart(invested, current, pnl) {
     if (holdingChart) {
         holdingChart.data.datasets[0].data = [invested, current, pnl];
-        holdingChart.data.datasets[0].backgroundColor = ['#4B5EAA', '#10B981', pnl >= 0 ? '#10B981' : '#EF4444'];
-        holdingChart.data.datasets[0].borderColor = ['#4B5EAA', '#10B981', pnl >= 0 ? '#10B981' : '#EF4444'];
-        holdingChart.update();
+        holdingChart.update('none');
     }
 }
 
@@ -1497,7 +1423,7 @@ function updateActivityChart() {
 
         activityChart.data.labels = labels.length ? labels : ['No Data'];
         activityChart.data.datasets[0].data = data.length ? data : [0];
-        activityChart.update();
+        activityChart.update('none');
     }
 }
 
