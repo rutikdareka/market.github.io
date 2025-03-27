@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('appContent').classList.add('hidden');
     }
     hideSplashScreen();
-    initializeCharts(); // Initialize charts here
+    
     startPriceUpdates();
     activeTrades = JSON.parse(localStorage.getItem('trades') || '[]');
     updateIntradaySection();
@@ -1334,7 +1334,7 @@ function updateIntradaySummary(invested, current, pnl) {
     pnlEl.classList.add('number-animate');
     setTimeout(() => pnlEl.classList.remove('number-animate'), 300);
 
-    updateIntradayChart(invested, current, pnl);
+    
 }
 
 function updateHoldingSummary(invested, current, pnl) {
@@ -1354,8 +1354,6 @@ function updateHoldingSummary(invested, current, pnl) {
     pnlEl.className = pnl >= 0 ? 'profit mt-1' : 'loss mt-1';
     pnlEl.classList.add('number-animate');
     setTimeout(() => pnlEl.classList.remove('number-animate'), 300);
-
-    updateHoldingChart(invested, current, pnl);
 }
 
 function updateActivitySummary(totalTrades, completedTrades, netPL, netPLPercentage) {
@@ -1365,7 +1363,6 @@ function updateActivitySummary(totalTrades, completedTrades, netPL, netPLPercent
     pnlElement.textContent = `₹${Math.abs(netPL).toFixed(2)} (${netPLPercentage}%)`;
     pnlElement.className = netPL >= 0 ? 'profit mt-1' : 'loss mt-1';
 
-    updateActivityChart();
 }
 
 // Update DOMContentLoaded to initialize charts
@@ -1380,7 +1377,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('appContent').classList.add('hidden');
     }
     hideSplashScreen();
-    initializeCharts(); // Initialize charts here
+    
     startPriceUpdates();
     activeTrades = JSON.parse(localStorage.getItem('trades') || '[]');
     updateIntradaySection();
