@@ -2,7 +2,7 @@ name: Send Notification
 
 on:
   schedule:
-    - cron: '*/1 * * * *'  # हर 5 मिनट में Run होगा
+    - cron: '*/1 * * * *'  # हर 1 मिनट में Run होगा
 
 jobs:
   run_script:
@@ -17,9 +17,8 @@ jobs:
           python-version: '3.x'
 
       - name: Install Dependencies
-         run: |
+        run: |
           pip install pushbullet.py
-       
 
       - name: Run Python Script
         run: python notify.py
