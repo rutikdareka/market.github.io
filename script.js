@@ -1,3 +1,61 @@
+// Notification Manager
+class NotificationManager {
+    constructor(apiKey) {
+        this.apiKey = apiKey;
+        this.baseUrl = "https://api.pushbullet.com/v2/pushes";
+    }
+
+    async sendNotification(title, body, deviceId = "Realme RMX2189") {
+        try {
+            const response = await fetch(this.baseUrl, {
+                method: "POST",
+                headers: {
+                    "Access-Token": this.apiKey,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    type: "note",
+                    title: title,
+                    body: body,
+                    device_iden: deviceId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Notification failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Notification Sent Successfully:", data);
+            return true;
+        } catch (error) {
+            console.error("Notification Error:", error);
+            return false;
+        }
+    }
+
+    // Specific notification types
+    async notifyTradeExecution(trade) {
+        const action = trade.action === 'BUY' ? 'Bought' : 'Sold';
+        const message = `${action} ${trade.quantity} shares of ${trade.stock_name} at ₹${trade.price_buy || trade.price_sell}`;
+        return this.sendNotification("Trade Executed", message);
+    }
+
+    async notifyProfitTarget(trade) {
+        const profit = trade.price_sell - trade.price_buy;
+        const message = `${trade.stock_name}: Target hit! Profit: ₹${profit.toFixed(2)}`;
+        return this.sendNotification("Profit Target Reached", message);
+    }
+
+    async notifyStopLoss(trade) {
+        const loss = trade.price_buy - trade.price_sell;
+        const message = `${trade.stock_name}: Stop Loss triggered. Loss: ₹${loss.toFixed(2)}`;
+        return this.sendNotification("Stop Loss Hit", message);
+    }
+}
+
+// Initialize notification manager
+const notifier = new NotificationManager("o.rPzjmQqA9P15fvbPlCmwcHhVQmEjwIYZ");
 
 let isSignedIn = localStorage.getItem('isSignedIn') === 'true';
 
@@ -179,12 +237,16 @@ function startPriceUpdates() {
                                         trade.timestamp_close = new Date().toISOString();
                                         trade.exitReason = 'Stop Loss Hit';
                                         console.log(`${trade.stock_name} SL hit at ₹${price}`);
+                                          // Send notification for new trade
+            await notifier.notifyTradeExecution(trade);
+
                                     } else if (trade.targetProfit > 0 && price >= trade.targetProfit) {
                                         trade.completed = true;
                                         trade.price_sell = price;
                                         trade.timestamp_close = new Date().toISOString();
                                         trade.exitReason = 'Target Profit Hit';
                                         console.log(`${trade.stock_name} TP hit at ₹${price}`);
+await notifier.notifyTradeExecution(trade);
                                     }
                                 } else if (trade.action === 'SELL') { // Short sell logic
                                     if (trade.stopLoss > 0 && price >= trade.stopLoss) { // SL is higher
@@ -193,12 +255,14 @@ function startPriceUpdates() {
                                         trade.timestamp_close = new Date().toISOString();
                                         trade.exitReason = 'Stop Loss Hit (Short)';
                                         console.log(`${trade.stock_name} SL hit (short) at ₹${price}`);
+await notifier.notifyTradeExecution(trade);
                                     } else if (trade.targetProfit > 0 && price <= trade.targetProfit) { // TP is lower
                                         trade.completed = true;
                                         trade.price_buy = price; // Buy back to exit
                                         trade.timestamp_close = new Date().toISOString();
                                         trade.exitReason = 'Target Profit Hit (Short)';
                                         console.log(`${trade.stock_name} TP hit (short) at ₹${price}`);
+await notifier.notifyTradeExecution(trade);
                                     }
                                 }
                             }
@@ -468,6 +532,10 @@ function handleTradeSubmit(type, isBuy) {
                 targetProfit: targetProfit,
                 buyAtPrice: isBuy ? buyAtPrice : 0 // Store buyAtPrice for reference
             };
+
+               // Send notification for new trade
+            await notifier.notifyTradeExecution(tradeData);
+
 
             const oppositeTrade = activeTrades.find(t => t.symbol === stockSymbol && t.type === type && t.action !== tradeData.action && !t.completed);
             if (oppositeTrade) {
