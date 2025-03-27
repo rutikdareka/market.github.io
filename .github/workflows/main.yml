@@ -19,8 +19,7 @@ jobs:
       - name: Install Dependencies
          run: |
           pip install pushbullet.py
-          pip install requests
-          pip install beautifulsoup4
+       
 
       - name: Run Python Script
         run: python notify.py
