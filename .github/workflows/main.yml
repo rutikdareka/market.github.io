@@ -1,0 +1,26 @@
+name: Send Notification
+
+on:
+  schedule:
+    - cron: '*/1 * * * *'  # हर 5 मिनट में Run होगा
+
+jobs:
+  run_script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+         run: |
+          pip install pushbullet.py
+          pip install requests
+          pip install beautifulsoup4
+
+      - name: Run Python Script
+        run: python notify.py
