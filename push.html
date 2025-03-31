@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Trading Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles */
+        .hidden { display: none; }
+        .badge-buy { @apply bg-blue-500 text-white px-2 py-1 rounded text-xs; }
+        .badge-sell { @apply bg-red-500 text-white px-2 py-1 rounded text-xs; }
+        .badge-complete { @apply bg-green-500 text-white px-2 py-1 rounded text-xs; }
+        .profit { @apply text-green-400; }
+        .loss { @apply text-red-400; }
+        .exit-btn { @apply bg-red-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-red-700; }
+        .edit-btn { @apply bg-gray-600 text-white p-1 rounded cursor-pointer hover:bg-gray-700; }
+        .exit-all-btn { @apply bg-red-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-red-700; }
+        .number-animate { transition: all 0.3s ease; }
+        #searchOverlay.open, #tradeOverlay.open { @apply flex; }
+        #loaderContainer.show { @apply flex; }
+        .notification-item { @apply bg-gray-800 p-4 rounded-lg mb-4 shadow-lg; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+        <!-- Notification Section -->
+        <div class="fixed bottom-4 right-4 w-80 max-h-96 overflow-y-auto">
+            <h3 class="text-lg mb-2">Notifications</h3>
+            <div id="notificationList"></div>
+        </div>
+</body>
+  <script src="script.js"></script>
+</html>
