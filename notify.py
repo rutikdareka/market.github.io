@@ -98,7 +98,7 @@ def send_notifications(notifications_list):
 
 if __name__ == "__main__":
     # Parse notifications from HTML file
-    html_notifications = parse_html_notifications("index.html")
+    html_notifications = parse_html_notifications("push.html")
     
     # Get latest articles from CNBC
     web_notifications = get_latest_articles()
