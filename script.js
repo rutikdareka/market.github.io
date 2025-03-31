@@ -1,3 +1,20 @@
+        // Add function to display notifications in the UI
+        function displayNotification(title, body) {
+            const notificationList = document.getElementById('notificationList');
+            const notificationItem = document.createElement('div');
+            notificationItem.className = 'notification-item';
+            notificationItem.innerHTML = `
+                <h4 class="text-lg font-semibold">${title}</h4>
+                <p class="text-sm text-gray-300">${body}</p>
+                <span class="text-xs text-gray-500">${new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
+            `;
+            notificationList.prepend(notificationItem);
+
+            // Auto-remove notification after 5 seconds
+            setTimeout(() => notificationItem.remove(), 5000);
+        }
+
+
 // Notification Manager
 class NotificationManager {
     constructor(apiKey) {
