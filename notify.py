@@ -1,5 +1,4 @@
 import requests
-from bs4 import BeautifulSoup
 from pushbullet import Pushbullet
 
 # Pushbullet API Key (Replace it with your secure key)
