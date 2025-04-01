@@ -114,8 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isSignedIn = localStorage.getItem('isSignedIn') === 'true';
 
     if (isSignedIn) {
-        document.getElementById('landingPage').classList.add('hidden');
-        document.getElementById('appContent').classList.remove('hidden');
+        document.getElementById('landingPage').classList.remove('hidden');
+        document.getElementById('appContent').classList.add('hidden');
         document.getElementById('signInBtn').textContent = 'Sign Out';
         document.getElementById('signInBtn').onclick = handleSignOut;
     } else {
