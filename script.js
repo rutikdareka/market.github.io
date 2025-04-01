@@ -74,12 +74,15 @@ class NotificationManager {
 // Initialize notification manager
 const notifier = new NotificationManager("o.rPzjmQqA9P15fvbPlCmwcHhVQmEjwIYZ");
 
+// Global variable for sign-in state
 let isSignedIn = localStorage.getItem('isSignedIn') === 'true';
 
-
+// Toggle sign-in overlay (show/hide logic)
 function toggleSignInOverlay() {
-    document.getElementById('signInOverlay').style.display = 'flex';
+    const overlay = document.getElementById('signInOverlay');
+    overlay.style.display = overlay.style.display === 'flex' ? 'none' : 'flex';
 }
+
 
 function handleSignIn() {
     const username = document.getElementById('username').value;
