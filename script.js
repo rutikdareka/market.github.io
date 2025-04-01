@@ -119,8 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('signInBtn').textContent = 'Sign Out';
         document.getElementById('signInBtn').onclick = handleSignOut;
     } else {
-        document.getElementById('landingPage').classList.remove('hidden');
-        document.getElementById('appContent').classList.add('hidden');
+        document.getElementById('landingPage').classList.add('hidden');
+        document.getElementById('appContent').classList.remove('hidden');
         document.getElementById('signInBtn').textContent = 'Sign In';
         document.getElementById('signInBtn').onclick = toggleSignInOverlay;
     }
