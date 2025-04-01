@@ -74,43 +74,8 @@ class NotificationManager {
 // Initialize notification manager
 const notifier = new NotificationManager("o.rPzjmQqA9P15fvbPlCmwcHhVQmEjwIYZ");
 
-// Global variable for sign-in state
-let isSignedIn = localStorage.getItem('isSignedIn') === 'true';
-
-// Toggle sign-in overlay (show/hide logic)
-function toggleSignInOverlay() {
-    const overlay = document.getElementById('signInOverlay');
-    overlay.style.display = overlay.style.display === 'flex' ? 'none' : 'flex';
-}
 
 
-function handleSignIn() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    // Simple hardcoded credentials (for demo; no database)
-    if (username.length >= 5 && password.length >= 6) {
-        isSignedIn = true;
-        localStorage.setItem(`userid`, username);
-        localStorage.setItem("isSignedIn",true)
-        document.getElementById('signInOverlay').style.display = 'none';
-        document.getElementById('landingPage').classList.add('hidden');
-        document.getElementById('appContent').classList.remove('hidden');
-        document.getElementById('signInBtn').textContent = 'Sign Out';
-        document.getElementById('signInBtn').onclick = handleSignOut;
-    } else {
-        alert('atleast 5 characters for username and 6 characters for password');
-    }
-}
-
-function handleSignOut() {
-    isSignedIn = false;
-    localStorage.setItem('isSignedIn', 'false');
-    document.getElementById('landingPage').classList.remove('hidden');
-    document.getElementById('appContent').classList.add('hidden');
-    document.getElementById('signInBtn').textContent = 'Sign In';
-    document.getElementById('signInBtn').onclick = toggleSignInOverlay;
-}
 
 // Include the rest of your JavaScript (e.g., fetchLatestPrice, updateIntradaySection, etc.) here
 let typingTimer;
@@ -1422,25 +1387,7 @@ function updateActivitySummary(totalTrades, completedTrades, netPL, netPLPercent
 
 // Initialize UI based on sign-in state
 document.addEventListener('DOMContentLoaded', () => {
-    const landingPage = document.getElementById('landingPage');
-    const appContent = document.getElementById('appContent');
-    const signInBtn = document.getElementById('signInBtn');
-    const signInOverlay = document.getElementById('signInOverlay');
 
-    // Ensure sign-in overlay is hidden initially
-    signInOverlay.style.display = 'none';
-
-    if (isSignedIn) {
-        landingPage.classList.add('hidden');
-        appContent.classList.remove('hidden');
-        signInBtn.textContent = 'Sign Out';
-        signInBtn.onclick = handleSignOut;
-    } else {
-        landingPage.classList.remove('hidden');
-        appContent.classList.add('hidden');
-        signInBtn.textContent = 'Sign In';
-        signInBtn.onclick = toggleSignInOverlay;
-    }
 
     hideSplashScreen();
     startPriceUpdates();
