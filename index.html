@@ -17,7 +17,7 @@
         <div class="navbar-container">
             <h1 class="navbar-logo">TrackMoney</h1>
             <div class="navbar-actions">
-                <button class="navbar-btn" id="signInBtn" onclick="toggleSignInOverlay()">Sign In</button>
+                
                 <button class="navbar-icon" onclick="toggleSearchOverlay()">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                         stroke="currentColor" class="w-6 h-6">
@@ -29,23 +29,8 @@
         </div>
     </nav>
 
-    <!-- Sign In Overlay -->
-    <div class="sign-in-overlay" id="signInOverlay">
-        <div class="sign-in-form">
-            <h2>Sign In</h2>
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button class="sign-in-btn" onclick="handleSignIn()">Sign In</button>
-        </div>
-    </div>
 
-    <!-- Landing Page (Shown if not signed in) -->
-    <div class="landing-page" id="landingPage">
-        <h1 class="landing-title">Welcome to TrackMoney</h1>
-        <p class="landing-subtitle">Your ultimate tool to track, analyze, and profit from stock trading with real-time
-            insights.</p>
-        <a href="#" class="landing-btn" onclick="toggleSignInOverlay()">Get Started</a>
-    </div>
+
 
     <!-- Main App Content (Shown after sign in) -->
     <div id="appContent" class="hidden">
