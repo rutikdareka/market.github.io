@@ -3,8 +3,6 @@
             background-color: black;
         }
 
-
-
         .tab-container {
             position: relative;
             pointer-events: auto;
@@ -420,7 +418,6 @@
         .hide-splash {
             opacity: 0;
             pointer-events: none;
-                 display: none !important;
         }
 
         .trade-panel {
@@ -1011,7 +1008,7 @@
     display: block;
 }
 
-/* Ensure trade panel doesn’t interfere */
+/* Ensure trade panel doesnâ€™t interfere */
 .trade-panel {
     padding: 20px;
     border-radius: 8px;
