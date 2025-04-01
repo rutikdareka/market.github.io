@@ -106,7 +106,7 @@ function handleSignOut() {
     document.getElementById('landingPage').classList.remove('hidden');
     document.getElementById('appContent').classList.add('hidden');
     document.getElementById('signInBtn').textContent = 'Sign In';
-    document.getElementById('signInBtn').onclick = toggleSignInOverlay;
+    document.getElementById('signInBtn').onclick = toggleSignInOverlay();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
