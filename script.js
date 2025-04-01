@@ -1454,8 +1454,9 @@ function updateActivitySummary(totalTrades, completedTrades, netPL, netPLPercent
 
 }
 
-// Update DOMContentLoaded to initialize charts
+// Initialize UI based on sign-in state
 document.addEventListener('DOMContentLoaded', () => {
+    // Use the global isSignedIn variable
     if (isSignedIn) {
         document.getElementById('landingPage').classList.add('hidden');
         document.getElementById('appContent').classList.remove('hidden');
@@ -1464,9 +1465,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         document.getElementById('landingPage').classList.remove('hidden');
         document.getElementById('appContent').classList.add('hidden');
+        document.getElementById('signInBtn').textContent = 'Sign In';
+        document.getElementById('signInBtn').onclick = toggleSignInOverlay;
     }
+
     hideSplashScreen();
-    
     startPriceUpdates();
     activeTrades = JSON.parse(localStorage.getItem('trades') || '[]');
     updateIntradaySection();
