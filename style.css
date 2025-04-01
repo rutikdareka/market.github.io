@@ -420,6 +420,7 @@
         .hide-splash {
             opacity: 0;
             pointer-events: none;
+                 display: none !important;
         }
 
         .trade-panel {
