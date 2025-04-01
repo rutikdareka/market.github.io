@@ -1456,17 +1456,24 @@ function updateActivitySummary(totalTrades, completedTrades, netPL, netPLPercent
 
 // Initialize UI based on sign-in state
 document.addEventListener('DOMContentLoaded', () => {
-    // Use the global isSignedIn variable
+    const landingPage = document.getElementById('landingPage');
+    const appContent = document.getElementById('appContent');
+    const signInBtn = document.getElementById('signInBtn');
+    const signInOverlay = document.getElementById('signInOverlay');
+
+    // Ensure sign-in overlay is hidden initially
+    signInOverlay.style.display = 'none';
+
     if (isSignedIn) {
-        document.getElementById('landingPage').classList.add('hidden');
-        document.getElementById('appContent').classList.remove('hidden');
-        document.getElementById('signInBtn').textContent = 'Sign Out';
-        document.getElementById('signInBtn').onclick = handleSignOut;
+        landingPage.classList.add('hidden');
+        appContent.classList.remove('hidden');
+        signInBtn.textContent = 'Sign Out';
+        signInBtn.onclick = handleSignOut;
     } else {
-        document.getElementById('landingPage').classList.remove('hidden');
-        document.getElementById('appContent').classList.add('hidden');
-        document.getElementById('signInBtn').textContent = 'Sign In';
-        document.getElementById('signInBtn').onclick = toggleSignInOverlay;
+        landingPage.classList.remove('hidden');
+        appContent.classList.add('hidden');
+        signInBtn.textContent = 'Sign In';
+        signInBtn.onclick = toggleSignInOverlay;
     }
 
     hideSplashScreen();
