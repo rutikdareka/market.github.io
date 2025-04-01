@@ -1,81 +1,51 @@
-        // Add function to display notifications in the UI
-        function displayNotification(title, body) {
-            const notificationList = document.getElementById('notificationList');
-            const notificationItem = document.createElement('div');
-            notificationItem.className = 'notification-item';
-            notificationItem.innerHTML = `
-                <h4 class="text-lg font-semibold">${title}</h4>
-                <p class="text-sm text-gray-300">${body}</p>
-                <span class="text-xs text-gray-500">${new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
-            `;
-            notificationList.prepend(notificationItem);
 
-            // Auto-remove notification after 5 seconds
-            setTimeout(() => notificationItem.remove(), 5000);
-        }
+let isSignedIn = localStorage.getItem('isSignedIn') === 'true';
 
 
-// Notification Manager
-class NotificationManager {
-    constructor(apiKey) {
-        this.apiKey = apiKey;
-        this.baseUrl = "https://api.pushbullet.com/v2/pushes";
-    }
+function toggleSignInOverlay() {
+    document.getElementById('signInOverlay').style.display = 'flex';
+}
 
-    async sendNotification(title, body, deviceId = "Realme RMX2189") {
-        try {
-            const response = await fetch(this.baseUrl, {
-                method: "POST",
-                headers: {
-                    "Access-Token": this.apiKey,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    type: "note",
-                    title: title,
-                    body: body,
-                    device_iden: deviceId
-                })
-            });
+function handleSignIn() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
 
-            if (!response.ok) {
-                throw new Error(`Notification failed: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log("Notification Sent Successfully:", data);
-            return true;
-        } catch (error) {
-            console.error("Notification Error:", error);
-            return false;
-        }
-    }
-
-    // Specific notification types
-    async notifyTradeExecution(trade) {
-        const action = trade.action === 'BUY' ? 'Bought' : 'Sold';
-        const message = `${action} ${trade.quantity} shares of ${trade.stock_name} at ₹${trade.price_buy || trade.price_sell}`;
-        return this.sendNotification("Trade Executed", message);
-    }
-
-    async notifyProfitTarget(trade) {
-        const profit = trade.price_sell - trade.price_buy;
-        const message = `${trade.stock_name}: Target hit! Profit: ₹${profit.toFixed(2)}`;
-        return this.sendNotification("Profit Target Reached", message);
-    }
-
-    async notifyStopLoss(trade) {
-        const loss = trade.price_buy - trade.price_sell;
-        const message = `${trade.stock_name}: Stop Loss triggered. Loss: ₹${loss.toFixed(2)}`;
-        return this.sendNotification("Stop Loss Hit", message);
+    // Simple hardcoded credentials (for demo; no database)
+    if (username.length >= 5 && password.length >= 6) {
+        isSignedIn = true;
+        localStorage.setItem(`userid`, username);
+        localStorage.setItem("isSignedIn",true)
+        document.getElementById('signInOverlay').style.display = 'none';
+        document.getElementById('landingPage').classList.add('hidden');
+        document.getElementById('appContent').classList.remove('hidden');
+        document.getElementById('signInBtn').textContent = 'Sign Out';
+        document.getElementById('signInBtn').onclick = handleSignOut;
+    } else {
+        alert('atleast 5 characters for username and 6 characters for password');
     }
 }
 
-// Initialize notification manager
-const notifier = new NotificationManager("o.rPzjmQqA9P15fvbPlCmwcHhVQmEjwIYZ");
+function handleSignOut() {
+    isSignedIn = false;
+    localStorage.setItem('isSignedIn', 'false');
+    document.getElementById('landingPage').classList.remove('hidden');
+    document.getElementById('appContent').classList.add('hidden');
+    document.getElementById('signInBtn').textContent = 'Sign In';
+    document.getElementById('signInBtn').onclick = toggleSignInOverlay;
+}
 
-
-
+document.addEventListener('DOMContentLoaded', () => {
+    if (isSignedIn) {
+        document.getElementById('landingPage').classList.add('hidden');
+        document.getElementById('appContent').classList.remove('hidden');
+        document.getElementById('signInBtn').textContent = 'Sign Out';
+        document.getElementById('signInBtn').onclick = handleSignOut;
+    } else {
+        document.getElementById('landingPage').classList.remove('hidden');
+        document.getElementById('appContent').classList.add('hidden');
+    }
+    // Rest of your existing DOMContentLoaded logic here
+});
 
 // Include the rest of your JavaScript (e.g., fetchLatestPrice, updateIntradaySection, etc.) here
 let typingTimer;
@@ -203,22 +173,18 @@ function startPriceUpdates() {
 
                             if (isMarketOpen() && !trade.completed) {
                                 if (trade.action === 'BUY') {
-                                    if (trade.stopLoss > 0 && price == trade.stopLoss) {
+                                    if (trade.stopLoss > 0 && price <= trade.stopLoss) {
                                         trade.completed = true;
                                         trade.price_sell = price;
                                         trade.timestamp_close = new Date().toISOString();
                                         trade.exitReason = 'Stop Loss Hit';
                                         console.log(`${trade.stock_name} SL hit at ₹${price}`);
-                                          // Send notification for new trade
-            await notifier.notifyTradeExecution(trade);
-
                                     } else if (trade.targetProfit > 0 && price >= trade.targetProfit) {
                                         trade.completed = true;
                                         trade.price_sell = price;
                                         trade.timestamp_close = new Date().toISOString();
                                         trade.exitReason = 'Target Profit Hit';
                                         console.log(`${trade.stock_name} TP hit at ₹${price}`);
-await notifier.notifyTradeExecution(trade);
                                     }
                                 } else if (trade.action === 'SELL') { // Short sell logic
                                     if (trade.stopLoss > 0 && price >= trade.stopLoss) { // SL is higher
@@ -227,14 +193,12 @@ await notifier.notifyTradeExecution(trade);
                                         trade.timestamp_close = new Date().toISOString();
                                         trade.exitReason = 'Stop Loss Hit (Short)';
                                         console.log(`${trade.stock_name} SL hit (short) at ₹${price}`);
-await notifier.notifyTradeExecution(trade);
                                     } else if (trade.targetProfit > 0 && price <= trade.targetProfit) { // TP is lower
                                         trade.completed = true;
                                         trade.price_buy = price; // Buy back to exit
                                         trade.timestamp_close = new Date().toISOString();
                                         trade.exitReason = 'Target Profit Hit (Short)';
                                         console.log(`${trade.stock_name} TP hit (short) at ₹${price}`);
-await notifier.notifyTradeExecution(trade);
                                     }
                                 }
                             }
@@ -263,8 +227,26 @@ document.addEventListener('click', (e) => {
     }
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+    if (isSignedIn) {
+        document.getElementById('landingPage').classList.add('hidden');
+        document.getElementById('appContent').classList.remove('hidden');
+        document.getElementById('signInBtn').textContent = 'Sign Out';
+        document.getElementById('signInBtn').onclick = handleSignOut;
+    } else {
+        document.getElementById('landingPage').classList.remove('hidden');
+        document.getElementById('appContent').classList.add('hidden');
+    }
+    hideSplashScreen();
+    startPriceUpdates();
+    activeTrades = JSON.parse(localStorage.getItem('trades') || '[]');
+    updateIntradaySection();
+    updateHoldingSection();
+    updateActivitySection();
+});
+
 function hideSplashScreen() {
-    setTimeout(() => document.getElementById('splashScreen')?.classList.add('hide-splash'), 2000);
+    setTimeout(() => document.getElementById('splashScreen')?.classList.add('hide-splash'), 500);
 }
 
 function showLoader() { document.getElementById('loaderContainer')?.classList.add('show'); }
@@ -484,10 +466,6 @@ function handleTradeSubmit(type, isBuy) {
                 targetProfit: targetProfit,
                 buyAtPrice: isBuy ? buyAtPrice : 0 // Store buyAtPrice for reference
             };
-
-               // Send notification for new trade
-            await notifier.notifyTradeExecution(tradeData);
-
 
             const oppositeTrade = activeTrades.find(t => t.symbol === stockSymbol && t.type === type && t.action !== tradeData.action && !t.completed);
             if (oppositeTrade) {
@@ -877,7 +855,7 @@ function startPriceUpdates() {
 
                             // Check SL and TP here to ensure it runs
                             if (isMarketOpen() && !trade.completed) {
-                                if (trade.stopLoss > 0 && price >= trade.stopLoss) {
+                                if (trade.stopLoss > 0 && price <= trade.stopLoss) {
                                     trade.completed = true;
                                     trade.price_sell = price;
                                     trade.timestamp_close = new Date().toISOString();
@@ -1336,63 +1314,3 @@ async function fetchLatestPrice(symbol) {
     }
 }
 
-// Modify existing update functions to include chart updates
-function updateIntradaySummary(invested, current, pnl) {
-    const investedEl = document.querySelector('#intraday .info-section span:nth-child(1) b:last-child');
-    const currentEl = document.querySelector('#intraday .info-section span:nth-child(2) b:last-child');
-    const pnlEl = document.querySelector('#intraday .info-section span:nth-child(3) b:last-child');
-
-    const prevInvested = parseFloat(investedEl.textContent.replace('₹', '')) || 0;
-    const prevCurrent = parseFloat(currentEl.textContent.replace('₹', '')) || 0;
-
-    animateValue(investedEl, prevInvested, invested, 300);
-    animateValue(currentEl, prevCurrent, current, 300);
-
-    const pnlPercentage = invested > 0 ? ((pnl / invested) * 100).toFixed(2) : 0;
-    pnlEl.textContent = `${pnl >= 0 ? '+' : '-'}₹${Math.abs(pnl).toFixed(2)} (${pnlPercentage}%)`;
-    pnlEl.className = pnl >= 0 ? 'profit mt-1' : 'loss mt-1';
-    pnlEl.classList.add('number-animate');
-    setTimeout(() => pnlEl.classList.remove('number-animate'), 300);
-
-    
-}
-
-function updateHoldingSummary(invested, current, pnl) {
-    const investedEl = document.querySelector('#holding .info-section span:nth-child(1) b:last-child');
-    const currentEl = document.querySelector('#holding .info-section span:nth-child(2) b:last-child');
-    const pnlEl = document.querySelector('#holding .info-section span:nth-child(3) b:last-child');
-
-    const prevInvested = parseFloat(investedEl.textContent.replace('₹', '')) || 0;
-    const prevCurrent = parseFloat(currentEl.textContent.replace('₹', '')) || 0;
-
-    animateValue(investedEl, prevInvested, invested, 300);
-    animateValue(currentEl, prevCurrent, current, 300);
-
-    const pnlPercentage = invested > 0 ? ((pnl / invested) * 100).toFixed(2) : 0;
-    const sign = pnl >= 0 ? '+' : '-';
-    pnlEl.textContent = `${sign}₹${Math.abs(pnl).toFixed(2)} (${pnlPercentage}%)`;
-    pnlEl.className = pnl >= 0 ? 'profit mt-1' : 'loss mt-1';
-    pnlEl.classList.add('number-animate');
-    setTimeout(() => pnlEl.classList.remove('number-animate'), 300);
-}
-
-function updateActivitySummary(totalTrades, completedTrades, netPL, netPLPercentage) {
-    document.querySelector('#activity .info-section span:nth-child(1) b:last-child').textContent = totalTrades;
-    document.querySelector('#activity .info-section span:nth-child(2) b:last-child').textContent = completedTrades;
-    const pnlElement = document.querySelector('#activity .info-section span:nth-child(3) b:last-child');
-    pnlElement.textContent = `₹${Math.abs(netPL).toFixed(2)} (${netPLPercentage}%)`;
-    pnlElement.className = netPL >= 0 ? 'profit mt-1' : 'loss mt-1';
-
-}
-
-// Initialize UI based on sign-in state
-document.addEventListener('DOMContentLoaded', () => {
-
-
-    hideSplashScreen();
-    startPriceUpdates();
-    activeTrades = JSON.parse(localStorage.getItem('trades') || '[]');
-    updateIntradaySection();
-    updateHoldingSection();
-    updateActivitySection();
-});
