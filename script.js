@@ -109,23 +109,6 @@ function handleSignOut() {
     document.getElementById('signInBtn').onclick = toggleSignInOverlay;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Ensure `isSignedIn` is properly retrieved from localStorage
-    let isSignedIn = localStorage.getItem('isSignedIn') === 'true';
-
-    if (isSignedIn) {
-        document.getElementById('landingPage').classList.remove('hidden');
-        document.getElementById('appContent').classList.add('hidden');
-        document.getElementById('signInBtn').textContent = 'Sign Out';
-        document.getElementById('signInBtn').onclick = handleSignOut;
-    } else {
-        document.getElementById('landingPage').classList.add('hidden');
-        document.getElementById('appContent').classList.remove('hidden');
-        document.getElementById('signInBtn').textContent = 'Sign In';
-        document.getElementById('signInBtn').onclick = toggleSignInOverlay;
-    }
-});
-
 // Include the rest of your JavaScript (e.g., fetchLatestPrice, updateIntradaySection, etc.) here
 let typingTimer;
 const doneTypingInterval = 300;
@@ -310,26 +293,6 @@ document.addEventListener('click', (e) => {
     if (!e.target.closest('#stockSymbol') && !e.target.closest('#searchResultsContainer')) {
         document.getElementById('searchResultsContainer').classList.add('hidden');
     }
-});
-
-// Update DOMContentLoaded to initialize charts
-document.addEventListener('DOMContentLoaded', () => {
-    if (isSignedIn) {
-        document.getElementById('landingPage').classList.add('hidden');
-        document.getElementById('appContent').classList.remove('hidden');
-        document.getElementById('signInBtn').textContent = 'Sign Out';
-        document.getElementById('signInBtn').onclick = handleSignOut;
-    } else {
-        document.getElementById('landingPage').classList.remove('hidden');
-        document.getElementById('appContent').classList.add('hidden');
-    }
-    hideSplashScreen();
-    
-    startPriceUpdates();
-    activeTrades = JSON.parse(localStorage.getItem('trades') || '[]');
-    updateIntradaySection();
-    updateHoldingSection();
-    updateActivitySection();
 });
 
 function hideSplashScreen() {
