@@ -132,6 +132,7 @@ function fetchUSStockSymbols(query) {
         })
         .then(data => {
             if (!data || !data.result) throw new Error('Invalid response from Finnhub');
+            displayUSSearchResults(data.result)
             return data.result;
         })
         .catch(error => {
