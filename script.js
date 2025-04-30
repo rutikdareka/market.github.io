@@ -1321,8 +1321,7 @@ const FINNHUB_API_KEY = "d096t3hr01qnv9cgvshgd096t3hr01qnv9cgvsi0"; // Replace w
 const US_MARKET_OPEN = { hours: 9, minutes: 30 }; // 9:30 AM EST/EDT
 const US_MARKET_CLOSE = { hours: 16, minutes: 0 }; // 4:00 PM EST/EDT
 let priceUSUpdateIntervalId = null;
-const liveUSPr
-    ices = new Map(); // Initialize livePrices globally
+const liveUSPrices = new Map(); // Initialize livePrices globally
 const activeTrades = JSON.parse(localStorage.getItem('trades')) || []; // Initialize activeTrades
 
 // DST-aware US market open check
