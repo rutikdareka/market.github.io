@@ -6,15 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="ca-pub-4650463573348937">
     <title>TrackMoney</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="dist/output.css"> <!-- Link to compiled Tailwind CSS -->
     <link rel="stylesheet" href="style.css">
-   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4650463573348937"
-     crossorigin="anonymous"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4650463573348937"
+        crossorigin="anonymous"></script>
 </head>
 
 <body class="text-white">
-
+    <!-- Rest of your HTML remains unchanged -->
     <nav class="navbar">
         <div class="navbar-container">
             <h1 class="navbar-logo">TrackMoney</h1>
@@ -97,7 +97,7 @@
         </div>
 
         <!-- Intraday Tab -->
-        <div id="intraday" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center">
+        <div id="intraday" class="tab-content p-4 w-full items-center flex flex-col justify-center  align-center">
             <div class="w-[500px]">
                 <div class="w-[450px] mb-2.5 flex justify-end items-center">
                     <button class="new-button" onmousedown="this.style.transform='scale(0.9)';"
@@ -116,7 +116,7 @@
                         </div>
                     </span>
                     <span>
-                        <div class "t-sec"><b>Total P/L</b>
+                        <div class="t-sec"><b>Total P/L</b>
                             <div></div><b class="mt-1">₹0.00 (0%)</b>
                         </div>
                     </span>
@@ -210,7 +210,6 @@
                         <ul id="searchResults" class="py-1"></ul>
                     </div>
                     <div class="flex gap-4">
-
                         <div class="input-group flex-1">
                             <label class="block text-sm font-medium mb-2 text-gray-300">Quantity</label>
                             <input type="number" id="quantity" placeholder="Qty" class="search-input w-full" required
@@ -248,18 +247,15 @@
                 </form>
             </div>
         </div>
-
     </div>
-
 </body>
 <script src="script.js"></script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-YG7Q4JJLH9"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-YG7Q4JJLH9');
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-YG7Q4JJLH9');
 </script>
 </html>
