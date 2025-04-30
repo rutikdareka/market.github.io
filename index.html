@@ -7,14 +7,13 @@
     <meta name="google-site-verification" content="ca-pub-4650463573348937">
     <title>TrackMoney</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="dist/output.css"> <!-- Link to compiled Tailwind CSS -->
+    <link rel="stylesheet" href="dist/output.css">
     <link rel="stylesheet" href="style.css">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4650463573348937"
         crossorigin="anonymous"></script>
 </head>
 
 <body class="text-white">
-    <!-- Rest of your HTML remains unchanged -->
     <nav class="navbar">
         <div class="navbar-container">
             <h1 class="navbar-logo">TrackMoney</h1>
@@ -97,7 +96,7 @@
         </div>
 
         <!-- Intraday Tab -->
-        <div id="intraday" class="tab-content p-4 w-full items-center flex flex-col justify-center  align-center">
+        <div id="intraday" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center">
             <div class="w-[500px]">
                 <div class="w-[450px] mb-2.5 flex justify-end items-center">
                     <button class="new-button" onmousedown="this.style.transform='scale(0.9)';"
@@ -157,14 +156,68 @@
         <!-- US Stocks Tab -->
         <div id="usStocks" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center hidden">
             <div class="w-[500px]">
-                <div class="info-section">
-                    <span class="t-sec"><b>Top US Stocks</b>
-                        <div></div><p class="mt-1">Explore popular US stocks</p>
-                    </span>
+                <!-- Sub-Tabs for US Stocks -->
+                <div class="flex flex-wrap justify-center gap-4 mb-4">
+                    <button class="tab-button active" onclick="openSubTab('usStocksIntraday', this)">Intraday</button>
+                    <button class="tab-button" onclick="openSubTab('usStocksHolding', this)">Holding</button>
                 </div>
-                <div class="activity-section" id="usStocksList">
-                    <!-- Placeholder for US stocks content -->
-                    <p class="text-gray-400">List of top US stocks will be displayed here.</p>
+
+                <!-- US Stocks Intraday Sub-Tab -->
+                <div id="usStocksIntraday" class="sub-tab-content p-4 w-full items-center flex flex-col justify-center align-center">
+                    <div class="w-[500px]">
+                        <div class="w-[450px] mb-2.5 flex justify-end items-center">
+                            <button class="new-button" onmousedown="this.style.transform='scale(0.9)';"
+                                onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';"
+                                onclick="toggleTradePanel('usStocksIntraday')">
+                                New Trade
+                            </button>
+                        </div>
+                        <div class="info-section">
+                            <span class="t-sec"><b>Invested</b>
+                                <div></div><b class="mt-1">$0.00</b>
+                            </span>
+                            <span>
+                                <div class="t-sec"><b>Current</b>
+                                    <div></div><b class="mt-1">$0.00</b>
+                                </div>
+                            </span>
+                            <span>
+                                <div class="t-sec"><b>Total P/L</b>
+                                    <div></div><b class="mt-1">$0.00 (0%)</b>
+                                </div>
+                            </span>
+                        </div>
+                        <div class="activity-section" id="usStocksIntradayActivity"></div>
+                    </div>
+                </div>
+
+                <!-- US Stocks Holding Sub-Tab -->
+                <div id="usStocksHolding" class="sub-tab-content p-4 w-full items-center flex flex-col justify-center align-center hidden">
+                    <div class="w-[500px]">
+                        <div class="w-[450px] mb-2.5 flex justify-end items-center">
+                            <button class="new-button" onmousedown="this.style.transform='scale(0.9)';"
+                                onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';"
+                                onclick="toggleTradePanel('usStocksHolding')">
+                                Add Holding
+                            </button>
+                        </div>
+                        <div class="info-section">
+                            <span class="t-sec"><b>Invested</b>
+                                <div></div><b class="mt-1">$0.00</b>
+                            </span>
+                            <span>
+                                <div class="t-sec"><b>Current</b>
+                                    <div></div><b class="mt-1">$0.00</b>
+                                </div>
+                            </span>
+                            <span>
+                                <div class="t-sec"><b>Total P/L</b>
+                                    <div></div><b class="mt-1">$0.00 (0%)</b>
+                                </div>
+                            </span>
+                        </div>
+                        <div class="activity-section" id="usStocksHoldingActivity"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -197,12 +250,11 @@
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold" id="tradePanelTitle">New Trade</h2>
                 </div>
-                <!-- Inside the tradeOverlay form -->
                 <form id="tradeForm" class="space-y-4">
                     <div class="input-group flex-1">
                         <label class="block text-sm font-medium mb-2 text-gray-300">Stock Symbol</label>
                         <div class="relative">
-                            <input type="text" id="stockSymbol" placeholder="e.g., RELIANCE" class="search-input w-full"
+                            <input type="text" id="stockSymbol" placeholder="e.g., AAPL" class="search-input w-full"
                                 required onkeyup="callapi(event)" autocomplete="off">
                         </div>
                     </div>
@@ -218,31 +270,31 @@
                     </div>
                     <div class="flex gap-4">
                         <div class="input-group flex-1">
-                            <label class="block text-sm font-medium mb-2 text-gray-300">Latest Price (₹)</label>
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Latest Price ($)</label>
                             <input type="text" id="price" placeholder="Auto" class="search-input w-full" disabled>
                         </div>
                         <div class="input-group flex-1">
-                            <label class="block text-sm font-medium mb-2 text-gray-300">Buy at Price (₹)</label>
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Buy at Price ($)</label>
                             <input type="number" id="buyAtPrice" placeholder="Optional" class="search-input w-full"
                                 step="0.01">
                         </div>
                     </div>
                     <div class="flex gap-4">
                         <div class="input-group flex-1">
-                            <label class="block text-sm font-medium mb-2 text-gray-300">Stop Loss (₹)</label>
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Stop Loss ($)</label>
                             <input type="number" id="stopLoss" placeholder="SL" class="search-input w-full" step="0.01">
                         </div>
-                        <div class="input-group flex-1">
-                            <label class="block text-sm font-medium mb-2 text-gray-300">Target Profit (₹)</label>
+                            <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Target Profit ($)</label>
                             <input type="number" id="targetProfit" placeholder="TP" class="search-input w-full"
                                 step="0.01">
                         </div>
                     </div>
                     <div class="flex gap-4 justify-center mt-6">
                         <button type="button" class="trade-btn buy-btn"
-                            onclick="handleTradeSubmit(document.getElementById('tradePanelTitle').textContent.includes('Holding') ? 'holding' : 'intraday', true)">Buy</button>
+                            onclick="handleTradeSubmit(document.getElementById('tradePanelTitle').textContent.includes('Holding') ? 'usStocksHolding' : 'usStocksIntraday', true)">Buy</button>
                         <button type="button" class="trade-btn sell-btn"
-                            onclick="handleTradeSubmit(document.getElementById('tradePanelTitle').textContent.includes('Holding') ? 'holding' : 'intraday', false)">Sell</button>
+                            onclick="handleTradeSubmit(document.getElementById('tradePanelTitle').textContent.includes('Holding') ? 'usStocksHolding' : 'usStocksIntraday', false)">Sell</button>
                     </div>
                 </form>
             </div>
@@ -254,7 +306,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-YG7Q4JJLH9"></script>
 <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'G-YG7Q4JJLH9');
 </script>
