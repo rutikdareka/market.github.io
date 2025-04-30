@@ -96,7 +96,7 @@ function fetchStockSymbols(query) {
 }
 
 function fetchUSStockSymbols(query) {
-    const apiUrl = `https://groww.in/v1/api/search/v3/query/global/st_query?from=0&query=${encodeURIComponent(query)}&size=6&web=true`;
+    const apiUrl = `https://groww.in/v1/api/search/v3/query/global/st_query?from=0&query=${query}&size=6&web=true`;
     return fetch(apiUrl, {
         method: 'GET',
         headers: {
