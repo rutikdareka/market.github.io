@@ -1320,7 +1320,7 @@ async function fetchLatestPrice(symbol) {
 const FINNHUB_API_KEY = "d096t3hr01qnv9cgvshgd096t3hr01qnv9cgvsi0"; // Replace with env var or local fallback
 const US_MARKET_OPEN = { hours: 9, minutes: 30 }; // 9:30 AM EST/EDT
 const US_MARKET_CLOSE = { hours: 16, minutes: 0 }; // 4:00 PM EST/EDT
-let priceUpdateIntervalId = null;
+let priceUSUpdateIntervalId = null;
 const livePrices = new Map(); // Initialize livePrices globally
 const activeTrades = JSON.parse(localStorage.getItem('trades')) || []; // Initialize activeTrades
 
@@ -1425,10 +1425,10 @@ async function fetchUSLatestPrice(symbol) {
 
 // Optimized price update with rate limiting
 function startUSPriceUpdateForInput(symbol, priceInput) {
-    if (priceUpdateIntervalId) {
-        clearInterval(priceUpdateIntervalId);
+    if (priceUSUpdateIntervalId) {
+        clearInterval(priceUSUpdateIntervalId);
     }
-    priceUpdateIntervalId = setInterval(async () => {
+    priceUSUpdateIntervalId = setInterval(async () => {
         if (isUSMarketOpen()) {
             try {
                 const latestPrice = await fetchUSLatestPrice(symbol);
