@@ -1322,3 +1322,14 @@
         page-break-inside: avoid;
     }
 }
+
+
+#usSearchResultsContainer {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    z-index: 1000; /* Ensure it’s above other elements */
+}
