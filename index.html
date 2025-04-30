@@ -76,7 +76,7 @@
                 <button class="text-gray-400" onclick="toggleSearchOverlay()">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="rou   nd" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -91,6 +91,7 @@
             <div class="flex flex-wrap justify-center gap-4">
                 <button class="tab-button active" onclick="openTab('intraday', this)">Intraday</button>
                 <button class="tab-button" onclick="openTab('holding', this)">Holding</button>
+                <button class="tab-button" onclick="openTab('usStocks', this)">US Stocks</button>
                 <button class="tab-button" onclick="openTab('activity', this)">Activity</button>
             </div>
         </div>
@@ -115,7 +116,7 @@
                         </div>
                     </span>
                     <span>
-                        <div class="t-sec"><b>Total P/L</b>
+                        <div class "t-sec"><b>Total P/L</b>
                             <div></div><b class="mt-1">₹0.00 (0%)</b>
                         </div>
                     </span>
@@ -150,6 +151,21 @@
                     </span>
                 </div>
                 <div class="activity-section" id="holdingActivity"></div>
+            </div>
+        </div>
+
+        <!-- US Stocks Tab -->
+        <div id="usStocks" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center hidden">
+            <div class="w-[500px]">
+                <div class="info-section">
+                    <span class="t-sec"><b>Top US Stocks</b>
+                        <div></div><p class="mt-1">Explore popular US stocks</p>
+                    </span>
+                </div>
+                <div class="activity-section" id="usStocksList">
+                    <!-- Placeholder for US stocks content -->
+                    <p class="text-gray-400">List of top US stocks will be displayed here.</p>
+                </div>
             </div>
         </div>
 
