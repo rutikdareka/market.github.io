@@ -1315,3 +1315,583 @@ async function fetchLatestPrice(symbol) {
 }
 
 
+// US STOCKS FUNCTIONLITY'S
+const US_MARKET_OPEN = { hours: 9, minutes: 30 }; // 9:30 AM EST
+const US_MARKET_CLOSE = { hours: 16, minutes: 0 }; // 4:00 PM EST
+const GROWW_BEARER_TOKEN = 'Bearer eyJraWQiOiJXTTZDLVEiLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NDYyNzEyMTMsImlhdCI6MTc0NjAxMTk4MCwibmJmIjoxNzQ2MDExOTMwLCJzdWIiOiJ7XCJlbWFpbElkXCI6XCJ2aWpheWRhcmVrYXI0MUBnbWFpbC5jb21cIixcInBsYXRmb3JtXCI6XCJ3ZWJcIixcInBsYXRmb3JtVmVyc2lvblwiOm51bGwsXCJvc1wiOm51bGwsXCJvc1ZlcnNpb25cIjpudWxsLFwiaXBBZGRyZXNzXCI6XCIxMDMuMTkwLjk2LjE0MyxcIixcIm1hY0FkZHJlc3NcIjpudWxsLFwidXNlckFnZW50XCI6XCJNb3ppbGxhLzUuMCAoTWFjaW50b3NoOyBJbnRlbCBNYWMgT1MgWCAxMF8xNV83KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBDaHJvbWUvMTM1LjAuMC4wIFNhZmFyaS81MzcuMzZcIixcImdyb3d3VXNlckFnZW50XCI6bnVsbCxcImRldmljZUlkXCI6XCIxNWQyOTJlNC01MDY5LTU4YjktYWRjYy01NDY2ZTAwN2E3YTJcIixcInNlc3Npb25JZFwiOlwiM2EyN2E3NTYtNDAyOC00MjA5LTg0OWQtN2YxN2Y4NDBlYWMyXCIsXCJzZXNzaW9uSWRJc3N1ZWRBdFwiOjE3NDQ5NTMzMTA2OTEsXCJzdXBlckFjY291bnRJZFwiOlwiQUNDMDQwMzk0NTE3NTk3NFwiLFwidXNlckFjY291bnRJZFwiOlwiQUNDMDQwMzk0NTE3NTk3NFwiLFwidHlwZVwiOlwiQVRcIixcInRva2VuRXhwaXJ5XCI6MTc0NjI3MTIxMzM5MixcInRva2VuSWRcIjpcImMyZjkxOTU2LTVkNDMtNGRkMS05Y2UxLTYyOWY1MWY2MTBjM1wiLFwiYnNlVXNlcklkXCI6XCIwNjAxNzA0NzExXCJ9IiwiaXNzIjoiZ3Jvd3diaWxsaW9ubWlsbGVubmlhbCJ9.69-jv0WTiWrqscyZAbkFkGve_RAQzXiVhG6-hOs-S9cXx15TcU9SUTyMVSL2SLvdXhNNDjU4jIApBJs6LbOQew';
+let priceUpdateIntervalId = null;
+
+// Check if US market is open (EST)
+function isUSMarketOpen() {
+    const now = new Date();
+    const estOffset = -5 * 60 * 60 * 1000; // EST is UTC-5
+    const estTime = new Date(now.getTime() + estOffset);
+    const hours = estTime.getUTCHours();
+    const minutes = estTime.getUTCMinutes();
+    const currentTime = hours * 60 + minutes;
+    const openTime = US_MARKET_OPEN.hours * 60 + US_MARKET_OPEN.minutes;
+    const closeTime = US_MARKET_CLOSE.hours * 60 + US_MARKET_CLOSE.minutes;
+    return currentTime >= openTime && currentTime < closeTime;
+}
+
+// Format time in EST
+function formatESTTime(date) {
+    const options = { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: true };
+    return date.toLocaleTimeString('en-US', options);
+}
+
+// Search US stock symbols using Groww API
+function fetchUSStockSymbols(query) {
+    const apiUrl = `https://groww.in/v1/api/search/v3/query/global/st_query?from=0&query=${encodeURIComponent(query)}&size=6&web=true`;
+    fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36'
+        }
+    })
+        .then(response => response.json())
+        .then(data => displayUSSearchResults(data.hits))
+        .catch(error => console.error("Error fetching US stock symbols:", error));
+}
+
+// Display search results
+function displayUSSearchResults(results) {
+    const resultsContainer = document.getElementById('searchResultsContainer');
+    const resultsList = document.getElementById('searchResults');
+    resultsList.innerHTML = '';
+
+    if (results && Array.isArray(results) && results.length > 0) {
+        resultsContainer.classList.remove('hidden');
+        results.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'px-4 py-2 hover:bg-gray-700 cursor-pointer text-white';
+            const stockName = item.name || item.symbol;
+            const stockSymbol = item.symbol;
+            const sector = item.sector || 'US Stock';
+            li.innerHTML = `
+                <div class="flex flex-col">
+                    <span class="font-medium truncate">${stockName} (${stockSymbol})</span>
+                    <span class="text-xs text-gray-400">${sector}</span>
+                </div>`;
+            li.addEventListener('click', () => selectStock(stockSymbol, stockName, 'usStocks'));
+            resultsList.appendChild(li);
+        });
+    } else {
+        resultsContainer.classList.remove('hidden');
+        const li = document.createElement('li');
+        li.className = 'px-4 py-2 text-gray-400';
+        li.textContent = 'No matching US stocks found';
+        resultsList.appendChild(li);
+    }
+}
+
+// Fetch latest price using Groww API
+async function fetchUSLatestPrice(symbol) {
+    if (!isUSMarketOpen()) {
+        return livePrices.get(symbol) || 0;
+    }
+    try {
+        const apiUrl = 'https://groww.in/v1/api/stocks_data/v1/tr_live_prices/exchange/US/latest_prices_batch';
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': GROWW_BEARER_TOKEN,
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+                'Accept-Encoding': 'gzip, deflate, br, zstd',
+                'Accept-Language': 'en-US,en;q=0.9,hi;q=0.8'
+            },
+            body: JSON.stringify({ symbols: [symbol] })
+        });
+        const data = await response.json();
+        const priceData = data[0];
+        const latestPrice = parseFloat(priceData.ltp);
+        if (latestPrice > 0) {
+            livePrices.set(symbol, latestPrice);
+            return latestPrice;
+        }
+        throw new Error('Price not found');
+    } catch (error) {
+        console.error(`Error fetching US price for ${symbol}:`, error);
+        return livePrices.get(symbol) || 0;
+    }
+}
+
+// Start real-time price updates for input field
+function startPriceUpdateForInput(symbol, priceInput, marketType) {
+    if (priceUpdateIntervalId) {
+        clearInterval(priceUpdateIntervalId);
+    }
+    priceUpdateIntervalId = setInterval(async () => {
+        if (marketType === 'usStocks' ? isUSMarketOpen() : isMarketOpen()) {
+            try {
+                const latestPrice = marketType === 'usStocks' ? await fetchUSLatestPrice(symbol) : await fetchLatestPrice(symbol);
+                if (latestPrice > 0) {
+                    priceInput.value = marketType === 'usStocks' ? `$${latestPrice.toFixed(2)}` : formatIndianNumber(latestPrice);
+                    livePrices.set(symbol, latestPrice);
+                }
+            } catch (error) {
+                console.error(`Error updating price for ${symbol}:`, error);
+            }
+        }
+    }, 5000); // Update every 5 seconds to respect rate limits
+}
+
+// Toggle trade panel
+function toggleTradePanel(type) {
+    const overlay = document.getElementById("tradeOverlay");
+    const panel = document.getElementById("tradePanel");
+    const title = document.getElementById("tradePanelTitle");
+    title.textContent = type === 'usStocks' ? "Add US Stock" : type === 'holding' ? "Add Holding" : "New Trade";
+    overlay.classList.toggle("open");
+    panel.classList.toggle("open");
+    resetTradeForm();
+}
+
+// Handle trade submission
+function handleTradeSubmit(type, isBuy) {
+    if (type === 'usStocks' && !isUSMarketOpen()) {
+        alert(`US market is closed! Trading is allowed only between 9:30 AM and 4:00 PM EST. Current EST: ${formatESTTime(new Date())}`);
+        return;
+    }
+
+    const stockSymbolInput = document.getElementById("stockSymbol");
+    const stockSymbol = stockSymbolInput.value.toUpperCase();
+    const stockName = stockSymbolInput.dataset.stockName || stockSymbol;
+    const quantity = document.getElementById("quantity").value;
+    const priceInput = document.getElementById("price");
+    const buyAtPrice = parseFloat(document.getElementById("buyAtPrice").value) || 0;
+    const stopLoss = parseFloat(document.getElementById("stopLoss").value) || 0;
+    const targetProfit = parseFloat(document.getElementById("targetProfit").value) || 0;
+
+    if (!stockSymbol || !quantity) {
+        alert("Please fill all required fields");
+        return;
+    }
+
+    showLoader();
+    const fetchPrice = type === 'usStocks' ? fetchUSLatestPrice : fetchLatestPrice;
+    fetchPrice(stockSymbol).then(latestPrice => {
+        if (latestPrice) {
+            const effectiveBuyPrice = (isBuy && buyAtPrice > 0) ? buyAtPrice : latestPrice;
+            priceInput.value = type === 'usStocks' ? `$${latestPrice.toFixed(2)}` : formatIndianNumber(latestPrice);
+
+            const tradeData = {
+                symbol: stockSymbol,
+                quantity: parseInt(quantity),
+                price_buy: isBuy ? effectiveBuyPrice : 0,
+                price_sell: !isBuy ? latestPrice : 0,
+                currentPrice: latestPrice,
+                stock_name: stockName,
+                type: type,
+                action: isBuy ? 'BUY' : 'SELL',
+                timestamp: new Date().toISOString(),
+                completed: false,
+                stopLoss: stopLoss,
+                targetProfit: targetProfit,
+                buyAtPrice: isBuy ? buyAtPrice : 0,
+                marketType: type === 'usStocks' ? 'usStocks' : 'indian',
+                currency: type === 'usStocks' ? 'USD' : 'INR'
+            };
+
+            const oppositeTrade = activeTrades.find(t => t.symbol === stockSymbol && t.type === type && t.action !== tradeData.action && !t.completed);
+            if (oppositeTrade) {
+                oppositeTrade.completed = true;
+                oppositeTrade.price_sell = !isBuy ? latestPrice : oppositeTrade.price_sell;
+                oppositeTrade.price_buy = isBuy ? effectiveBuyPrice : oppositeTrade.price_buy;
+                tradeData.completed = true;
+            } else {
+                activeTrades.push(tradeData);
+            }
+
+            localStorage.setItem('trades', JSON.stringify(activeTrades));
+            if (type === 'usStocks') updateUSStocksSection();
+            else if (type === 'intraday') updateIntradaySection();
+            else updateHoldingSection();
+            updateActivitySection();
+            closeTradePanel(new Event('click'));
+            hideLoader();
+        } else {
+            alert("Failed to fetch latest price.");
+            hideLoader();
+        }
+    }).catch(error => {
+        console.error('Error in handleTradeSubmit:', error);
+        hideLoader();
+    });
+}
+
+// Update US Stocks section
+function updateUSStocksSection() {
+    const activitySection = document.getElementById('usStocksActivity');
+    activitySection.innerHTML = '';
+
+    const usStocksTrades = activeTrades.filter(t => t.type === 'usStocks' && !t.completed);
+    if (usStocksTrades.length === 0) {
+        activitySection.innerHTML = '<div class="text-gray-400 p-4">No US stocks yet.</div>';
+        updateUSStocksSummary(0, 0, 0);
+        return;
+    }
+
+    const allExitButton = document.createElement('div');
+    allExitButton.className = 'w-full flex justify-end mb-4';
+    allExitButton.innerHTML = `<button class="exit-all-btn" onclick="exitAllUSStocks()">Exit All US Stocks</button>`;
+    activitySection.appendChild(allExitButton);
+
+    let totalInvested = 0;
+    let totalCurrent = 0;
+    let totalPnL = 0;
+
+    const tradesBySymbol = {};
+    usStocksTrades.forEach(trade => {
+        if (!tradesBySymbol[trade.symbol]) {
+            tradesBySymbol[trade.symbol] = {
+                symbol: trade.symbol,
+                stock_name: trade.stock_name,
+                buyQuantity: 0,
+                sellQuantity: 0,
+                totalBuyAmount: 0,
+                totalSellAmount: 0,
+                totalStopLoss: 0,
+                totalTargetProfit: 0,
+                tradeCount: 0,
+                currentPrice: trade.currentPrice,
+                timestamp: trade.timestamp,
+                buyAtPrice: trade.buyAtPrice || 0,
+                action: trade.action
+            };
+        }
+        if (trade.action === 'BUY') {
+            tradesBySymbol[trade.symbol].buyQuantity += trade.quantity;
+            tradesBySymbol[trade.symbol].totalBuyAmount += trade.quantity * trade.price_buy;
+            tradesBySymbol[trade.symbol].totalStopLoss += (trade.stopLoss || 0) * trade.quantity;
+            tradesBySymbol[trade.symbol].totalTargetProfit += (trade.targetProfit || 0) * trade.quantity;
+        } else {
+            tradesBySymbol[trade.symbol].sellQuantity += trade.quantity;
+            tradesBySymbol[trade.symbol].totalSellAmount += trade.quantity * trade.price_sell;
+            tradesBySymbol[trade.symbol].totalStopLoss += (trade.stopLoss || 0) * trade.quantity;
+            tradesBySymbol[trade.symbol].totalTargetProfit += (trade.targetProfit || 0) * trade.quantity;
+            tradesBySymbol[trade.symbol].action = 'SELL';
+        }
+        tradesBySymbol[trade.symbol].tradeCount += 1;
+        tradesBySymbol[trade.symbol].currentPrice = trade.currentPrice;
+    });
+
+    Object.values(tradesBySymbol).forEach(trade => {
+        const netQuantity = trade.buyQuantity - trade.sellQuantity;
+        const isShortSell = trade.sellQuantity > trade.buyQuantity || (trade.sellQuantity > 0 && trade.buyQuantity === 0);
+        const longQuantity = Math.max(0, netQuantity);
+        const shortQuantity = Math.max(0, trade.sellQuantity - trade.buyQuantity);
+        const longInvested = trade.totalBuyAmount;
+        const shortInvested = trade.totalSellAmount;
+        const invested = isShortSell ? shortInvested : longInvested;
+        const avgBuyPrice = longQuantity > 0 ? longInvested / longQuantity : 0;
+        const avgSellPrice = shortQuantity > 0 ? shortInvested / shortQuantity : 0;
+        const avgPrice = isShortSell ? avgSellPrice : avgBuyPrice;
+        const avgStopLoss = trade.totalStopLoss / (isShortSell ? shortQuantity : longQuantity) || 0;
+        const avgTargetProfit = trade.totalTargetProfit / (isShortSell ? shortQuantity : longQuantity) || 0;
+
+        let pnl = 0;
+        let currentValue = 0;
+        if (isShortSell) {
+            currentValue = shortQuantity * trade.currentPrice;
+            pnl = shortInvested - currentValue;
+        } else {
+            currentValue = longQuantity * trade.currentPrice;
+            pnl = currentValue - longInvested;
+        }
+
+        totalInvested += invested;
+        totalCurrent += currentValue;
+        totalPnL += pnl;
+
+        const stockItem = document.createElement('div');
+        stockItem.className = 'stock-item';
+        stockItem.innerHTML = `
+            <div>
+                <div class="stock-name">${trade.stock_name} ${isShortSell ? '(Short)' : ''}</div>
+                <div class="stock-quantity">${Math.abs(netQuantity)} qty | Avg: $${avgPrice.toFixed(2)}</div>
+                <div class="text-xs text-gray-400">
+                    Avg SL: ${trade.totalStopLoss > 0 ? '$' + avgStopLoss.toFixed(2) : 'Not Set'} | 
+                    Avg TP: ${trade.totalTargetProfit > 0 ? '$' + avgTargetProfit.toFixed(2) : 'Not Set'} | 
+                    ${isShortSell ? 'Sold At' : 'Buy At'}: ${trade.buyAtPrice > 0 ? '$' + trade.buyAtPrice.toFixed(2) : 'Market'}
+                </div>
+            </div>
+            <div class="stock-price">
+                <div>$${trade.currentPrice.toFixed(2)}</div>
+                <div class="${pnl >= 0 ? 'profit' : 'loss'}">
+                    ${pnl >= 0 ? '+' : '-'}$${Math.abs(pnl).toFixed(2)} (${(invested > 0 ? (pnl / invested * 100).toFixed(2) : '0.00')}%)
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <div class="exit-btn" onclick="exitTrade('${trade.symbol}', '${trade.timestamp}', 'usStocks')">
+                    Exit
+                </div>
+                <div class="edit-btn" onclick="editTradeLimits('${trade.symbol}', 'usStocks')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </div>
+            </div>`;
+        activitySection.appendChild(stockItem);
+    });
+
+    localStorage.setItem('trades', JSON.stringify(activeTrades));
+    updateUSStocksSummary(totalInvested, totalCurrent, totalPnL);
+}
+
+// Update US Stocks summary
+function updateUSStocksSummary(invested, current, pnl) {
+    const investedEl = document.querySelector('#usStocks .info-section span:nth-child(1) b:last-child');
+    const currentEl = document.querySelector('#usStocks .info-section span:nth-child(2) b:last-child');
+    const pnlEl = document.querySelector('#usStocks .info-section span:nth-child(3) b:last-child');
+
+    const prevInvested = parseFloat(investedEl.textContent.replace('$', '')) || 0;
+    const prevCurrent = parseFloat(currentEl.textContent.replace('$', '')) || 0;
+
+    animateValue(investedEl, prevInvested, invested, 300, '$');
+    animateValue(currentEl, prevCurrent, current, 300, '$');
+
+    const pnlPercentage = invested > 0 ? ((pnl / invested) * 100).toFixed(2) : 0;
+    const sign = pnl >= 0 ? '+' : '-';
+    pnlEl.textContent = `$${sign}${Math.abs(pnl).toFixed(2)} (${pnlPercentage}%)`;
+    pnlEl.className = pnl >= 0 ? 'profit mt-1' : 'loss mt-1';
+    pnlEl.classList.add('number-animate');
+    setTimeout(() => pnlEl.classList.remove('number-animate'), 300);
+}
+
+// Exit all US stocks
+function exitAllUSStocks() {
+    if (!isUSMarketOpen()) {
+        alert('US market is closed! Can only exit trades between 9:30 AM and 4:00 PM EST');
+        return;
+    }
+    if (!confirm('Are you sure you want to exit all US stock trades?')) {
+        return;
+    }
+    const usStocksTrades = activeTrades.filter(t => t.type === 'usStocks' && !t.completed);
+    if (usStocksTrades.length === 0) {
+        alert('No open US stock trades to exit.');
+        return;
+    }
+    usStocksTrades.forEach(trade => {
+        trade.completed = true;
+        if (trade.action === 'SELL') {
+            trade.price_buy = trade.currentPrice;
+        } else {
+            trade.price_sell = trade.currentPrice;
+        }
+        trade.timestamp_close = new Date().toISOString();
+    });
+    localStorage.setItem('trades', JSON.stringify(activeTrades));
+    alert(`${usStocksTrades.length} US stock trades exited successfully!`);
+    updateUSStocksSection();
+    updateActivitySection();
+}
+
+// Exit individual trade
+function exitTrade(symbol, timestamp, type) {
+    if (type === 'usStocks' && !isUSMarketOpen()) {
+        alert('US market is closed! Can only exit trades between 9:30 AM and 4:00 PM EST');
+        return;
+    }
+    if (confirm('Are you sure you want to exit this trade?')) {
+        let tradesExited = 0;
+        if (timestamp) {
+            const trade = activeTrades.find(t => t.symbol === symbol && t.timestamp === timestamp && !t.completed);
+            if (trade) {
+                trade.completed = true;
+                if (trade.action === 'SELL') {
+                    trade.price_buy = trade.currentPrice;
+                } else {
+                    trade.price_sell = trade.currentPrice;
+                }
+                trade.timestamp_close = new Date().toISOString();
+                tradesExited = 1;
+            }
+        } else {
+            const trades = activeTrades.filter(t => t.symbol === symbol && t.type === type && !t.completed);
+            trades.forEach(trade => {
+                trade.completed = true;
+                if (trade.action === 'SELL') {
+                    trade.price_buy = trade.currentPrice;
+                } else {
+                    trade.price_sell = trade.currentPrice;
+                }
+                trade.timestamp_close = new Date().toISOString();
+            });
+            tradesExited = trades.length;
+        }
+        if (tradesExited > 0) {
+            localStorage.setItem('trades', JSON.stringify(activeTrades));
+            if (type === 'usStocks') updateUSStocksSection();
+            else if (type === 'intraday') updateIntradaySection();
+            else updateHoldingSection();
+            updateActivitySection();
+            alert(`${tradesExited} trade${tradesExited > 1 ? 's' : ''} exited successfully!`);
+        } else {
+            alert('No trades found to exit.');
+        }
+    }
+}
+
+// Edit stop-loss and target-profit
+function editTradeLimits(symbol, type) {
+    const tradesToEdit = activeTrades.filter(t => t.type === type && t.symbol === symbol && !t.completed);
+    if (tradesToEdit.length === 0) {
+        alert(`No active ${type} trades found for this stock.`);
+        return;
+    }
+    const currency = type === 'usStocks' ? '$' : '₹';
+    const newStopLoss = prompt(`Enter new Stop Loss for ${symbol} (Current: ${tradesToEdit[0].stopLoss ? currency + tradesToEdit[0].stopLoss.toFixed(2) : 'Not Set'})`, tradesToEdit[0].stopLoss || '');
+    const newTargetProfit = prompt(`Enter new Target Profit for ${symbol} (Current: ${tradesToEdit[0].targetProfit ? currency + tradesToEdit[0].targetProfit.toFixed(2) : 'Not Set'})`, tradesToEdit[0].targetProfit || '');
+    if (newStopLoss !== null && newTargetProfit !== null) {
+        const stopLossValue = parseFloat(newStopLoss) || 0;
+        const targetProfitValue = parseFloat(newTargetProfit) || 0;
+        tradesToEdit.forEach(trade => {
+            trade.stopLoss = stopLossValue;
+            trade.targetProfit = targetProfitValue;
+        });
+        localStorage.setItem('trades', JSON.stringify(activeTrades));
+        if (type === 'usStocks') updateUSStocksSection();
+        else if (type === 'intraday') updateIntradaySection();
+        else updateHoldingSection();
+        updateActivitySection();
+        alert(`Updated SL and TP for ${symbol} (${type})`);
+    }
+}
+
+// Animate value transitions
+function animateValue(element, start, end, duration, prefix = '') {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const value = start + (end - start) * progress;
+        element.textContent = `${prefix}${value.toFixed(2)}`;
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    element.classList.add('number-animate');
+    window.requestAnimationFrame(step);
+    setTimeout(() => element.classList.remove('number-animate'), duration);
+}
+
+// Modified startPriceUpdates to include US stocks
+function startPriceUpdates() {
+    setInterval(async () => {
+        if (!isMarketOpen() && !isUSMarketOpen()) return;
+
+        let pricesUpdated = false;
+        const uniqueSymbols = [...new Set(activeTrades.map(trade => trade.symbol))];
+
+        for (const symbol of uniqueSymbols) {
+            try {
+                const trade = activeTrades.find(t => t.symbol === symbol);
+                const isUSStock = trade && trade.type === 'usStocks';
+                const price = isUSStock ? await fetchUSLatestPrice(symbol) : await fetchLatestPrice(symbol);
+                if (price > 0) {
+                    activeTrades.forEach(trade => {
+                        if (trade.symbol === symbol) {
+                            trade.currentPrice = price;
+                            pricesUpdated = true;
+
+                            if ((isUSStock ? isUSMarketOpen() : isMarketOpen()) && !trade.completed) {
+                                if (trade.action === 'BUY') {
+                                    if (trade.stopLoss > 0 && price <= trade.stopLoss) {
+                                        trade.completed = true;
+                                        trade.price_sell = price;
+                                        trade.timestamp_close = new Date().toISOString();
+                                        trade.exitReason = 'Stop Loss Hit';
+                                        console.log(`${trade.stock_name} SL hit at ${trade.currency === 'USD' ? '$' : '₹'}${price}`);
+                                    } else if (trade.targetProfit > 0 && price >= trade.targetProfit) {
+                                        trade.completed = true;
+                                        trade.price_sell = price;
+                                        trade.timestamp_close = new Date().toISOString();
+                                        trade.exitReason = 'Target Profit Hit';
+                                        console.log(`${trade.stock_name} TP hit at ${trade.currency === 'USD' ? '$' : '₹'}${price}`);
+                                    }
+                                } else if (trade.action === 'SELL') {
+                                    if (trade.stopLoss > 0 && price >= trade.stopLoss) {
+                                        trade.completed = true;
+                                        trade.price_buy = price;
+                                        trade.timestamp_close = new Date().toISOString();
+                                        trade.exitReason = 'Stop Loss Hit (Short)';
+                                        console.log(`${trade.stock_name} SL hit (short) at ${trade.currency === 'USD' ? '$' : '₹'}${price}`);
+                                    } else if (trade.targetProfit > 0 && price <= trade.targetProfit) {
+                                        trade.completed = true;
+                                        trade.price_buy = price;
+                                        trade.timestamp_close = new Date().toISOString();
+                                        trade.exitReason = 'Target Profit Hit (Short)';
+                                        console.log(`${trade.stock_name} TP hit (short) at ${trade.currency === 'USD' ? '$' : '₹'}${price}`);
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error(`Failed to update price for ${symbol}:`, error);
+            }
+        }
+
+        if (pricesUpdated) {
+            updateIntradaySection();
+            updateHoldingSection();
+            updateUSStocksSection();
+            updateActivitySection();
+            localStorage.setItem('trades', JSON.stringify(activeTrades));
+        }
+
+        checkIntradayAutoClose();
+    }, 5000); // Update every 5 seconds to respect rate limits
+}
+
+// Modified callapi to handle market type
+function callapi(e) {
+    clearTimeout(typingTimer);
+    const searchValue = e.target.value.trim();
+    const tradeType = document.getElementById('tradePanelTitle').textContent.includes('US Stock') ? 'usStocks' : 'indian';
+    if (!searchValue) {
+        document.getElementById('searchResultsContainer').classList.add('hidden');
+        return;
+    }
+    typingTimer = setTimeout(() => {
+        if (tradeType === 'usStocks') {
+            fetchUSStockSymbols(searchValue);
+        } else {
+            fetchStockSymbols(searchValue);
+        }
+    }, doneTypingInterval);
+}
+
+// Modified selectStock to handle market type
+async function selectStock(symbol, name, marketType) {
+    const symbolInput = document.getElementById('stockSymbol');
+    const priceInput = document.getElementById('price');
+    symbolInput.value = symbol;
+    document.getElementById('searchResultsContainer').classList.add('hidden');
+    symbolInput.dataset.stockName = name;
+    symbolInput.dataset.marketType = marketType;
+
+    try {
+        showLoader();
+        const price = marketType === 'usStocks' ? await fetchUSLatestPrice(symbol) : await fetchLatestPrice(symbol);
+        if (price > 0) {
+            priceInput.value = marketType === 'usStocks' ? `$${price.toFixed(2)}` : formatIndianNumber(price);
+            livePrices.set(symbol, price);
+            startPriceUpdateForInput(symbol, priceInput, marketType);
+        } else {
+            priceInput.value = 'N/A';
+        }
+        hideLoader();
+    } catch (error) {
+        console.error('Error in selectStock:', error);
+        priceInput.value = 'N/A';
+        hideLoader();
+    }
+}
