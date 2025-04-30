@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let typingTimer;
 const doneTypingInterval = 300;
-const priceUpdateInterval = 1000;
+const priceUpdateInterval = 3000;
 let livePrices = new Map();
 let liveUSPrices = new Map();
 let activeTrades = [];
@@ -118,26 +118,41 @@ function displaySearchResults(data) {
     }
 }
 
+const searchCache = new Map();
+
 function fetchUSStockSymbols(query) {
+    if (searchCache.has(query)) {
+        console.log(`Using cached results for query: ${query}`);
+        return Promise.resolve(searchCache.get(query));
+    }
+
     if (!FINNHUB_API_KEY || FINNHUB_API_KEY === 'YOUR_FINNHUB_API_KEY') {
         console.error('Finnhub API key is missing or invalid');
         alert('API key is not configured. Contact the administrator.');
         return Promise.resolve([]);
     }
     const apiUrl = `https://finnhub.io/api/v1/search?q=${encodeURIComponent(query)}&token=${FINNHUB_API_KEY}`;
+    console.log('Fetching US stocks from:', apiUrl);
     return fetch(apiUrl)
         .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                console.error(`HTTP error! Status: ${response.status}, Text: ${response.statusText}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             return response.json();
         })
         .then(data => {
-            if (!data || !data.result) throw new Error('Invalid response from Finnhub');
-            displayUSSearchResults(data.result)
+            console.log('Raw API Response:', data);
+            if (!data || !data.result) {
+                console.warn('No result array in response:', data);
+                throw new Error('Invalid response from Finnhub');
+            }
+            searchCache.set(query, data.result); // Cache the results
             return data.result;
         })
         .catch(error => {
             console.error("Error fetching US stock symbols:", error);
-            alert('Failed to fetch stock symbols. Please try again later.');
+            alert('Failed to fetch stock symbols. Please try again later. Check console for details.');
             return [];
         });
 }
@@ -246,61 +261,91 @@ function startUSPriceUpdateForInput(symbol, priceInput) {
     }, 5000); // Increased to 5 seconds to avoid rate limits
 }
 
+const priceCache = new Map();
+
+async function fetchUSLatestPrice(symbol) {
+    const now = Date.now();
+    const cached = priceCache.get(symbol);
+    if (cached && (now - cached.timestamp < 10000)) { // 10-second cache
+        console.log(`Using cached price for ${symbol}: $${cached.price}`);
+        return cached.price;
+    }
+
+    if (!isUSMarketOpen()) {
+        console.log(`Market closed, skipping price fetch for ${symbol}`);
+        return 0;
+    }
+    try {
+        const apiUrl = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        const price = parseFloat(data.c) || 0;
+        priceCache.set(symbol, { price, timestamp: now }); // Cache the price
+        console.log(`Fetched US price for ${symbol}: $${price}`);
+        return price;
+    } catch (error) {
+        console.error(`Error fetching US price for ${symbol}:`, error);
+        return 0;
+    }
+}
+
 function startPriceUpdates() {
-    setInterval(() => {
+    setInterval(async () => {
         // Update Indian Stocks
         if (isMarketOpen()) {
             let pricesUpdated = false;
             const uniqueSymbols = [...new Set(activeTrades.map(trade => trade.symbol))];
 
             for (const symbol of uniqueSymbols) {
-                fetchLatestPrice(symbol)
-                    .then(price => {
-                        if (price > 0) {
-                            activeTrades.forEach(trade => {
-                                if (trade.symbol === symbol) {
-                                    trade.currentPrice = price;
-                                    pricesUpdated = true;
+                try {
+                    const price = await fetchLatestPrice(symbol);
+                    if (price > 0) {
+                        activeTrades.forEach(trade => {
+                            if (trade.symbol === symbol) {
+                                trade.currentPrice = price;
+                                pricesUpdated = true;
 
-                                    if (isMarketOpen() && !trade.completed) {
-                                        if (trade.action === 'BUY') {
-                                            if (trade.stopLoss > 0 && price <= trade.stopLoss) {
-                                                trade.completed = true;
-                                                trade.price_sell = price;
-                                                trade.timestamp_close = new Date().toISOString();
-                                                trade.exitReason = 'Stop Loss Hit';
-                                                console.log(`${trade.stock_name} SL hit at ₹${price}`);
-                                            } else if (trade.targetProfit > 0 && price >= trade.targetProfit) {
-                                                trade.completed = true;
-                                                trade.price_sell = price;
-                                                trade.timestamp_close = new Date().toISOString();
-                                                trade.exitReason = 'Target Profit Hit';
-                                                console.log(`${trade.stock_name} TP hit at ₹${price}`);
-                                            }
-                                        } else if (trade.action === 'SELL') {
-                                            if (trade.stopLoss > 0 && price >= trade.stopLoss) {
-                                                trade.completed = true;
-                                                trade.price_buy = price;
-                                                trade.timestamp_close = new Date().toISOString();
-                                                trade.exitReason = 'Stop Loss Hit (Short)';
-                                                console.log(`${trade.stock_name} SL hit (short) at ₹${price}`);
-                                            } else if (trade.targetProfit > 0 && price <= trade.targetProfit) {
-                                                trade.completed = true;
-                                                trade.price_buy = price;
-                                                trade.timestamp_close = new Date().toISOString();
-                                                trade.exitReason = 'Target Profit Hit (Short)';
-                                                console.log(`${trade.stock_name} TP hit (short) at ₹${price}`);
-                                            }
+                                if (isMarketOpen() && !trade.completed) {
+                                    if (trade.action === 'BUY') {
+                                        if (trade.stopLoss > 0 && price <= trade.stopLoss) {
+                                            trade.completed = true;
+                                            trade.price_sell = price;
+                                            trade.timestamp_close = new Date().toISOString();
+                                            trade.exitReason = 'Stop Loss Hit';
+                                            console.log(`${trade.stock_name} SL hit at ₹${price}`);
+                                        } else if (trade.targetProfit > 0 && price >= trade.targetProfit) {
+                                            trade.completed = true;
+                                            trade.price_sell = price;
+                                            trade.timestamp_close = new Date().toISOString();
+                                            trade.exitReason = 'Target Profit Hit';
+                                            console.log(`${trade.stock_name} TP hit at ₹${price}`);
+                                        }
+                                    } else if (trade.action === 'SELL') {
+                                        if (trade.stopLoss > 0 && price >= trade.stopLoss) {
+                                            trade.completed = true;
+                                            trade.price_buy = price;
+                                            trade.timestamp_close = new Date().toISOString();
+                                            trade.exitReason = 'Stop Loss Hit (Short)';
+                                            console.log(`${trade.stock_name} SL hit (short) at ₹${price}`);
+                                        } else if (trade.targetProfit > 0 && price <= trade.targetProfit) {
+                                            trade.completed = true;
+                                            trade.price_buy = price;
+                                            trade.timestamp_close = new Date().toISOString();
+                                            trade.exitReason = 'Target Profit Hit (Short)';
+                                            console.log(`${trade.stock_name} TP hit (short) at ₹${price}`);
                                         }
                                     }
                                 }
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error(`Failed to update price for ${symbol}:`, error);
-                    });
-            } // <-- this was the missing closing brace
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Failed to update price for ${symbol}:`, error);
+                }
+            }
 
             if (pricesUpdated) {
                 updateIntradaySection();
@@ -318,52 +363,53 @@ function startPriceUpdates() {
             const uniqueUSSymbols = [...new Set(activeUSTrades.map(trade => trade.symbol))];
 
             for (const symbol of uniqueUSSymbols) {
-                fetchUSLatestPrice(symbol)
-                    .then(price => {
-                        if (price > 0) {
-                            activeUSTrades.forEach(trade => {
-                                if (trade.symbol === symbol) {
-                                    trade.currentPrice = price;
-                                    usPricesUpdated = true;
+                try {
+                    const price = await fetchUSLatestPrice(symbol);
+                    if (price > 0) {
+                        activeUSTrades.forEach(trade => {
+                            if (trade.symbol === symbol) {
+                                trade.currentPrice = price;
+                                usPricesUpdated = true;
 
-                                    if (isUSMarketOpen() && !trade.completed) {
-                                        if (trade.action === 'BUY') {
-                                            if (trade.stopLoss > 0 && price <= trade.stopLoss) {
-                                                trade.completed = true;
-                                                trade.price_sell = price;
-                                                trade.timestamp_close = new Date().toISOString();
-                                                trade.exitReason = 'Stop Loss Hit';
-                                                console.log(`${trade.stock_name} SL hit at $${price}`);
-                                            } else if (trade.targetProfit > 0 && price >= trade.targetProfit) {
-                                                trade.completed = true;
-                                                trade.price_sell = price;
-                                                trade.timestamp_close = new Date().toISOString();
-                                                trade.exitReason = 'Target Profit Hit';
-                                                console.log(`${trade.stock_name} TP hit at $${price}`);
-                                            }
-                                        } else if (trade.action === 'SELL') {
-                                            if (trade.stopLoss > 0 && price >= trade.stopLoss) {
-                                                trade.completed = true;
-                                                trade.price_buy = price;
-                                                trade.timestamp_close = new Date().toISOString();
-                                                trade.exitReason = 'Stop Loss Hit (Short)';
-                                                console.log(`${trade.stock_name} SL hit (short) at $${price}`);
-                                            } else if (trade.targetProfit > 0 && price <= trade.targetProfit) {
-                                                trade.completed = true;
-                                                trade.price_buy = price;
-                                                trade.timestamp_close = new Date().toISOString();
-                                                trade.exitReason = 'Target Profit Hit (Short)';
-                                                console.log(`${trade.stock_name} TP hit (short) at $${price}`);
-                                            }
+                                if (isUSMarketOpen() && !trade.completed) {
+                                    if (trade.action === 'BUY') {
+                                        if (trade.stopLoss > 0 && price <= trade.stopLoss) {
+                                            trade.completed = true;
+                                            trade.price_sell = price;
+                                            trade.timestamp_close = new Date().toISOString();
+                                            trade.exitReason = 'Stop Loss Hit';
+                                            console.log(`${trade.stock_name} SL hit at $${price}`);
+                                        } else if (trade.targetProfit > 0 && price >= trade.targetProfit) {
+                                            trade.completed = true;
+                                            trade.price_sell = price;
+                                            trade.timestamp_close = new Date().toISOString();
+                                            trade.exitReason = 'Target Profit Hit';
+                                            console.log(`${trade.stock_name} TP hit at $${price}`);
+                                        }
+                                    } else if (trade.action === 'SELL') {
+                                        if (trade.stopLoss > 0 && price >= trade.stopLoss) {
+                                            trade.completed = true;
+                                            trade.price_buy = price;
+                                            trade.timestamp_close = new Date().toISOString();
+                                            trade.exitReason = 'Stop Loss Hit (Short)';
+                                            console.log(`${trade.stock_name} SL hit (short) at $${price}`);
+                                        } else if (trade.targetProfit > 0 && price <= trade.targetProfit) {
+                                            trade.completed = true;
+                                            trade.price_buy = price;
+                                            trade.timestamp_close = new Date().toISOString();
+                                            trade.exitReason = 'Target Profit Hit (Short)';
+                                            console.log(`${trade.stock_name} TP hit (short) at $${price}`);
                                         }
                                     }
                                 }
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error(`Failed to update US price for ${symbol}:`, error);
-                    });
+                            }
+                        });
+                    }
+                    // Add a delay between requests to avoid rate limits
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (error) {
+                    console.error(`Failed to update US price for ${symbol}:`, error);
+                }
             }
 
             if (usPricesUpdated) {
@@ -374,7 +420,6 @@ function startPriceUpdates() {
         }
     }, priceUpdateInterval);
 }
-
 
 document.addEventListener('click', (e) => {
     if (!e.target.closest('#stockSymbol') && !e.target.closest('#searchResultsContainer')) {
