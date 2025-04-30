@@ -1528,6 +1528,27 @@ async function fetchLatestPrice(symbol) {
     }
 }
 
+async function fetchUSLatestPrice(symbol) {
+    if (!isUSMarketOpen()) {
+        console.log(`Market closed, skipping price fetch for ${symbol}`);
+        return 0;
+    }
+    try {
+        const apiUrl = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        const price = parseFloat(data.c) || 0;
+        console.log(`Fetched US price for ${symbol}: $${price}`); // Debug
+        return price;
+    } catch (error) {
+        console.error(`Error fetching US price for ${symbol}:`, error);
+        return 0;
+    }
+}
+
 
 function formatIndianNumber(num) {
     const formatter = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 });
