@@ -101,7 +101,36 @@
                 <div class="w-[450px] mb-2.5 flex justify-end items-center">
                     <button class="new-button" onmousedown="this.style.transform='scale(0.9)';"
                         onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';"
-                        onclick="toggleTradePanel('intraday')">
+                        onclick="toggleTradePanel('Ind Stocks Intraday')">
+                        New Trade
+                    </button>
+                </div>
+                <div class="info-section">
+                    <span class="t-sec"><b>Invested</b>
+                        <div></div><b class="mt-1">₹0.00</b>
+                    </span>
+                    <span>
+                        <div class="t-sec"><b>Current</b>
+                            <div></div><b class="mt-1">₹0.00</b>
+                        </div>
+                    </span>
+                    <span>
+                        <div class="t-sec"><b>Total P/L</b>
+                            <div></div><b class="mt-1">₹0.00 (0%)</b>
+                        </div>
+                    </span>
+                </div>
+                <div class="activity-section" id="intradayActivity"></div>
+            </div>
+        </div>
+
+         <!-- Intraday Tab -->
+        <div id="intraday" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center">
+            <div class="w-[500px]">
+                <div class="w-[450px] mb-2.5 flex justify-end items-center">
+                    <button class="new-button" onmousedown="this.style.transform='scale(0.9)';"
+                        onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';"
+                        onclick="toggleTradePanel('US Stocks Intraday')">
                         New Trade
                     </button>
                 </div>
@@ -130,7 +159,36 @@
                 <div class="w-[450px] mb-2.5 flex justify-end items-center">
                     <button class="new-button" onmousedown="this.style.transform='scale(0.9)';"
                         onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';"
-                        onclick="toggleTradePanel('holding')">
+                        onclick="toggleTradePanel('Us Stocks Holding')">
+                        Add Holding
+                    </button>
+                </div>
+                <div class="info-section">
+                    <span class="t-sec"><b>Invested</b>
+                        <div></div><b class="mt-1">₹0.00</b>
+                    </span>
+                    <span>
+                        <div class="t-sec"><b>Current</b>
+                            <div></div><b class="mt-1">₹0.00</b>
+                        </div>
+                    </span>
+                    <span>
+                        <div class="t-sec"><b>Total P/L</b>
+                            <div></div><b class="mt-1">₹0.00 (0%)</b>
+                        </div>
+                    </span>
+                </div>
+                <div class="activity-section" id="holdingActivity"></div>
+            </div>
+        </div>
+
+         <!-- Holding Tab -->
+        <div id="holding" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center hidden">
+            <div class="w-[500px]">
+                <div class="w-[450px] mb-2.5 flex justify-end items-center">
+                    <button class="new-button" onmousedown="this.style.transform='scale(0.9)';"
+                        onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';"
+                        onclick="toggleTradePanel('Ind Stocks Holding')">
                         Add Holding
                     </button>
                 </div>
