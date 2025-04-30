@@ -1321,7 +1321,8 @@ const FINNHUB_API_KEY = "d096t3hr01qnv9cgvshgd096t3hr01qnv9cgvsi0"; // Replace w
 const US_MARKET_OPEN = { hours: 9, minutes: 30 }; // 9:30 AM EST/EDT
 const US_MARKET_CLOSE = { hours: 16, minutes: 0 }; // 4:00 PM EST/EDT
 let priceUSUpdateIntervalId = null;
-const livePrices = new Map(); // Initialize livePrices globally
+const liveUSPr
+    ices = new Map(); // Initialize livePrices globally
 const activeTrades = JSON.parse(localStorage.getItem('trades')) || []; // Initialize activeTrades
 
 // DST-aware US market open check
@@ -1402,7 +1403,7 @@ function displayUSSearchResults(results) {
 // Fetch latest US stock price with retry logic
 async function fetchUSLatestPrice(symbol) {
     if (!isUSMarketOpen()) {
-        return livePrices.get(symbol) || 0;
+        return liveUSPrices.get(symbol) || 0;
     }
     for (let attempt = 0; attempt < 3; attempt++) {
         try {
@@ -1411,13 +1412,13 @@ async function fetchUSLatestPrice(symbol) {
             const data = await response.json();
             const latestPrice = parseFloat(data.c); // Current price
             if (latestPrice > 0) {
-                livePrices.set(symbol, latestPrice);
+                liveUSPrices.set(symbol, latestPrice);
                 return latestPrice;
             }
             throw new Error('Price not found');
         } catch (error) {
             console.error(`Error fetching US price for ${symbol} (attempt ${attempt + 1}):`, error);
-            if (attempt === 2) return livePrices.get(symbol) || 0;
+            if (attempt === 2) return liveUSPrices.get(symbol) || 0;
             await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt))); // Exponential backoff
         }
     }
@@ -1434,7 +1435,7 @@ function startUSPriceUpdateForInput(symbol, priceInput) {
                 const latestPrice = await fetchUSLatestPrice(symbol);
                 if (latestPrice > 0) {
                     priceInput.value = `$${latestPrice.toFixed(2)}`;
-                    livePrices.set(symbol, latestPrice);
+                    liveUSPrices.set(symbol, latestPrice);
                 }
             } catch (error) {
                 console.error(`Error updating price for ${symbol}:`, error);
