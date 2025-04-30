@@ -1317,7 +1317,7 @@ async function fetchLatestPrice(symbol) {
 
 
 // Store API key in environment variable (set in Vercel dashboard)
-const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY || 'YOUR_FINNHUB_API_KEY'; // Replace with env var or local fallback
+const FINNHUB_API_KEY = "d096t3hr01qnv9cgvshgd096t3hr01qnv9cgvsi0"; // Replace with env var or local fallback
 const US_MARKET_OPEN = { hours: 9, minutes: 30 }; // 9:30 AM EST/EDT
 const US_MARKET_CLOSE = { hours: 16, minutes: 0 }; // 4:00 PM EST/EDT
 let priceUpdateIntervalId = null;
