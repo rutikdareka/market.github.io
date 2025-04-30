@@ -1,4 +1,3 @@
-hey mujhe sirf us stocks ki functionality sab likhe do fast all of same to all of but used free tool or api but unlimited free and implement all of only send us stocks all of func not send complete js i've added fast and
 
 
 let isSignedIn = localStorage.getItem('isSignedIn') === 'true';
@@ -1316,3 +1315,489 @@ async function fetchLatestPrice(symbol) {
     }
 }
 
+
+// Store API key in environment variable (set in Vercel dashboard)
+const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY || 'YOUR_FINNHUB_API_KEY'; // Replace with env var or local fallback
+const US_MARKET_OPEN = { hours: 9, minutes: 30 }; // 9:30 AM EST/EDT
+const US_MARKET_CLOSE = { hours: 16, minutes: 0 }; // 4:00 PM EST/EDT
+let priceUpdateIntervalId = null;
+const livePrices = new Map(); // Initialize livePrices globally
+const activeTrades = JSON.parse(localStorage.getItem('trades')) || []; // Initialize activeTrades
+
+// DST-aware US market open check
+function isUSMarketOpen() {
+    const now = new Date();
+    const isDST = (now.getUTCMonth() > 2 && now.getUTCMonth() < 10) || // March to October
+                  (now.getUTCMonth() === 2 && now.getUTCDate() >= 14) || // After 2nd Sunday of March
+                  (now.getUTCMonth() === 10 && now.getUTCDate() < 7);     // Before 1st Sunday of November
+    const estOffset = isDST ? -4 * 60 * 60 * 1000 : -5 * 60 * 60 * 1000; // EDT or EST
+    const estTime = new Date(now.getTime() + estOffset);
+    const hours = estTime.getUTCHours();
+    const minutes = estTime.getUTCMinutes();
+    const day = estTime.getUTCDay();
+    const currentTime = hours * 60 + minutes;
+    const openTime = US_MARKET_OPEN.hours * 60 + US_MARKET_OPEN.minutes;
+    const closeTime = US_MARKET_CLOSE.hours * 60 + US_MARKET_OPEN.minutes;
+
+    return day >= 1 && day <= 5 && currentTime >= openTime && currentTime < closeTime;
+}
+
+function formatESTTime(date) {
+    const options = { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: true };
+    return date.toLocaleTimeString('en-US', options);
+}
+
+// Fetch US stock symbols with better error handling
+function fetchUSStockSymbols(query) {
+    if (!FINNHUB_API_KEY || FINNHUB_API_KEY === 'YOUR_FINNHUB_API_KEY') {
+        console.error('Finnhub API key is missing or invalid');
+        alert('API key is not configured. Contact the administrator.');
+        return Promise.resolve([]);
+    }
+    const apiUrl = `https://finnhub.io/api/v1/search?q=${encodeURIComponent(query)}&token=${FINNHUB_API_KEY}`;
+    return fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            if (!data || !data.result) throw new Error('Invalid response from Finnhub');
+            return data.result;
+        })
+        .catch(error => {
+            console.error("Error fetching US stock symbols:", error);
+            alert('Failed to fetch stock symbols. Please try again later.');
+            return [];
+        });
+}
+
+// Display US search results
+function displayUSSearchResults(results) {
+    const resultsContainer = document.getElementById('searchResultsContainer');
+    const resultsList = document.getElementById('searchResults');
+    if (!resultsContainer || !resultsList) return;
+
+    resultsList.innerHTML = '';
+    if (results && Array.isArray(results) && results.length > 0) {
+        resultsContainer.classList.remove('hidden');
+        results.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'px-4 py-2 hover:bg-gray-700 cursor-pointer text-white';
+            const stockName = item.description || item.displaySymbol;
+            const stockSymbol = item.symbol;
+            const sector = item.type || 'US Stock';
+            li.innerHTML = `<div class="flex flex-col"><span class="font-medium truncate">${stockName} (${stockSymbol})</span><span class="text-xs text-gray-400">${sector}</span></div>`;
+            li.addEventListener('click', () => selectStock(stockSymbol, stockName, 'usStocks'));
+            resultsList.appendChild(li);
+        });
+    } else {
+        resultsContainer.classList.remove('hidden');
+        const li = document.createElement('li');
+        li.className = 'px-4 py-2 text-gray-400';
+        li.textContent = 'No matching US stocks found';
+        resultsList.appendChild(li);
+    }
+}
+
+// Fetch latest US stock price with retry logic
+async function fetchUSLatestPrice(symbol) {
+    if (!isUSMarketOpen()) {
+        return livePrices.get(symbol) || 0;
+    }
+    for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+            const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            const latestPrice = parseFloat(data.c); // Current price
+            if (latestPrice > 0) {
+                livePrices.set(symbol, latestPrice);
+                return latestPrice;
+            }
+            throw new Error('Price not found');
+        } catch (error) {
+            console.error(`Error fetching US price for ${symbol} (attempt ${attempt + 1}):`, error);
+            if (attempt === 2) return livePrices.get(symbol) || 0;
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt))); // Exponential backoff
+        }
+    }
+}
+
+// Optimized price update with rate limiting
+function startUSPriceUpdateForInput(symbol, priceInput) {
+    if (priceUpdateIntervalId) {
+        clearInterval(priceUpdateIntervalId);
+    }
+    priceUpdateIntervalId = setInterval(async () => {
+        if (isUSMarketOpen()) {
+            try {
+                const latestPrice = await fetchUSLatestPrice(symbol);
+                if (latestPrice > 0) {
+                    priceInput.value = `$${latestPrice.toFixed(2)}`;
+                    livePrices.set(symbol, latestPrice);
+                }
+            } catch (error) {
+                console.error(`Error updating price for ${symbol}:`, error);
+            }
+        } else {
+            priceInput.value = '$0.00 (Market Closed)';
+        }
+    }, 5000); // Reduced to 5 seconds to respect Finnhub rate limits
+}
+
+// Toggle trade panel
+function toggleUSTradePanel(type) {
+    const overlay = document.getElementById("tradeOverlay");
+    const panel = document.getElementById("tradePanel");
+    const title = document.getElementById("tradePanelTitle");
+    if (!overlay || !panel || !title) return;
+    title.textContent = type === 'usStocks' ? "Add US Stock" : "New Trade";
+    overlay.classList.toggle("open");
+    panel.classList.toggle("open");
+    resetTradeForm();
+}
+
+// Handle US trade submission
+function handleUSTradeSubmit(type, isBuy) {
+    if (type === 'usStocks' && !isUSMarketOpen()) {
+        alert(`US market is closed! Trading is allowed only between 9:30 AM and 4:00 PM EST/EDT. Current EST: ${formatESTTime(new Date())}`);
+        return;
+    }
+
+    const stockSymbolInput = document.getElementById("stockSymbol");
+    const stockName = stockSymbolInput.dataset.stockName || stockSymbolInput.value.toUpperCase();
+    const quantity = document.getElementById("quantity")?.value;
+    const priceInput = document.getElementById("price");
+    const buyAtPrice = parseFloat(document.getElementById("buyAtPrice")?.value) || 0;
+    const stopLoss = parseFloat(document.getElementById("stopLoss")?.value) || 0;
+    const targetProfit = parseFloat(document.getElementById("targetProfit")?.value) || 0;
+
+    if (!stockSymbolInput.value || !quantity) {
+        alert("Please fill all required fields");
+        return;
+    }
+
+    showLoader();
+    fetchUSLatestPrice(stockSymbolInput.value).then(latestPrice => {
+        if (latestPrice) {
+            const effectiveBuyPrice = (isBuy && buyAtPrice > 0) ? buyAtPrice : latestPrice;
+            priceInput.value = `$${latestPrice.toFixed(2)}`;
+
+            const tradeData = {
+                symbol: stockSymbolInput.value.toUpperCase(),
+                quantity: parseInt(quantity),
+                price_buy: isBuy ? effectiveBuyPrice : 0,
+                price_sell: !isBuy ? latestPrice : 0,
+                currentPrice: latestPrice,
+                stock_name: stockName,
+                type: type,
+                action: isBuy ? 'BUY' : 'SELL',
+                timestamp: new Date().toISOString(),
+                completed: false,
+                stopLoss: stopLoss,
+                targetProfit: targetProfit,
+                buyAtPrice: isBuy ? buyAtPrice : 0,
+                marketType: 'usStocks',
+                currency: 'USD'
+            };
+
+            const oppositeTrade = activeTrades.find(t => t.symbol === tradeData.symbol && t.type === type && t.action !== tradeData.action && !t.completed);
+            if (oppositeTrade) {
+                oppositeTrade.completed = true;
+                oppositeTrade.price_sell = !isBuy ? latestPrice : oppositeTrade.price_sell;
+                oppositeTrade.price_buy = isBuy ? effectiveBuyPrice : oppositeTrade.price_buy;
+                tradeData.completed = true;
+            } else {
+                activeTrades.push(tradeData);
+            }
+
+            localStorage.setItem('trades', JSON.stringify(activeTrades));
+            updateUSStocksSection();
+            updateActivitySection();
+            closeTradePanel(new Event('click'));
+        } else {
+            alert("Failed to fetch latest price.");
+        }
+        hideLoader();
+    }).catch(error => {
+        console.error('Error in handleTradeSubmit:', error);
+        alert('Error processing trade. Please try again.');
+        hideLoader();
+    });
+}
+
+// Update US stocks section (unchanged, assuming existing functions work)
+function updateUSStocksSection() {
+    const activitySection = document.getElementById('usStocksActivity');
+    if (!activitySection) return;
+    activitySection.innerHTML = '';
+
+    const usStocksTrades = activeTrades.filter(t => t.type === 'usStocks' && !t.completed);
+    if (usStocksTrades.length === 0) {
+        activitySection.innerHTML = '<div class="text-gray-400 p-4">No US stocks yet.</div>';
+        updateUSStocksSummary(0, 0, 0);
+        return;
+    }
+
+    const allExitButton = document.createElement('div');
+    allExitButton.className = 'w-full flex justify-end mb-4';
+    allExitButton.innerHTML = `<button class="exit-all-btn" onclick="exitAllUSStocks()">Exit All US Stocks</button>`;
+    activitySection.appendChild(allExitButton);
+
+    let totalInvested = 0;
+    let totalCurrent = 0;
+    let totalPnL = 0;
+
+    const tradesBySymbol = {};
+    usStocksTrades.forEach(trade => {
+        if (!tradesBySymbol[trade.symbol]) {
+            tradesBySymbol[trade.symbol] = {
+                symbol: trade.symbol,
+                stock_name: trade.stock_name,
+                buyQuantity: 0,
+                sellQuantity: 0,
+                totalBuyAmount: 0,
+                totalSellAmount: 0,
+                totalStopLoss: 0,
+                totalTargetProfit: 0,
+                tradeCount: 0,
+                currentPrice: trade.currentPrice,
+                timestamp: trade.timestamp,
+                buyAtPrice: trade.buyAtPrice || 0,
+                action: trade.action
+            };
+        }
+        if (trade.action === 'BUY') {
+            tradesBySymbol[trade.symbol].buyQuantity += trade.quantity;
+            tradesBySymbol[trade.symbol].totalBuyAmount += trade.quantity * trade.price_buy;
+            tradesBySymbol[trade.symbol].totalStopLoss += (trade.stopLoss || 0) * trade.quantity;
+            tradesBySymbol[trade.symbol].totalTargetProfit += (trade.targetProfit || 0) * trade.quantity;
+        } else {
+            tradesBySymbol[trade.symbol].sellQuantity += trade.quantity;
+            tradesBySymbol[trade.symbol].totalSellAmount += trade.quantity * trade.price_sell;
+            tradesBySymbol[trade.symbol].totalStopLoss += (trade.stopLoss || 0) * trade.quantity;
+            tradesBySymbol[trade.symbol].totalTargetProfit += (trade.targetProfit || 0) * trade.quantity;
+            tradesBySymbol[trade.symbol].action = 'SELL';
+        }
+        tradesBySymbol[trade.symbol].tradeCount += 1;
+        tradesBySymbol[trade.symbol].currentPrice = trade.currentPrice;
+    });
+
+    Object.values(tradesBySymbol).forEach(trade => {
+        const netQuantity = trade.buyQuantity - trade.sellQuantity;
+        const isShortSell = trade.sellQuantity > trade.buyQuantity || (trade.sellQuantity > 0 && trade.buyQuantity === 0);
+        const longQuantity = Math.max(0, netQuantity);
+        const shortQuantity = Math.max(0, trade.sellQuantity - trade.buyQuantity);
+        const longInvested = trade.totalBuyAmount;
+        const shortInvested = trade.totalSellAmount;
+        const invested = isShortSell ? shortInvested : longInvested;
+        const avgBuyPrice = longQuantity > 0 ? longInvested / longQuantity : 0;
+        const avgSellPrice = shortQuantity > 0 ? shortInvested / shortQuantity : 0;
+        const avgPrice = isShortSell ? avgSellPrice : avgBuyPrice;
+        const avgStopLoss = trade.totalStopLoss / (isShortSell ? shortQuantity : longQuantity) || 0;
+        const avgTargetProfit = trade.totalTargetProfit / (isShortSell ? shortQuantity : longQuantity) || 0;
+
+        let pnl = 0;
+        let currentValue = 0;
+        if (isShortSell) {
+            currentValue = shortQuantity * trade.currentPrice;
+            pnl = shortInvested - currentValue;
+        } else {
+            currentValue = longQuantity * trade.currentPrice;
+            pnl = currentValue - longInvested;
+        }
+
+        totalInvested += invested;
+        totalCurrent += currentValue;
+        totalPnL += pnl;
+
+        const stockItem = document.createElement('div');
+        stockItem.className = 'stock-item';
+        stockItem.innerHTML = `
+            <div>
+                <div class="stock-name">${trade.stock_name} ${isShortSell ? '(Short)' : ''}</div>
+                <div class="stock-quantity">${Math.abs(netQuantity)} qty | Avg: $${avgPrice.toFixed(2)}</div>
+                <div class="text-xs text-gray-400">
+                    Avg SL: ${trade.totalStopLoss > 0 ? '$' + avgStopLoss.toFixed(2) : 'Not Set'} | 
+                    Avg TP: ${trade.totalTargetProfit > 0 ? '$' + avgTargetProfit.toFixed(2) : 'Not Set'} | 
+                    ${isShortSell ? 'Sold At' : 'Buy At'}: ${trade.buyAtPrice > 0 ? '$' + trade.buyAtPrice.toFixed(2) : 'Market'}
+                </div>
+            </div>
+            <div class="stock-price">
+                <div>$${trade.currentPrice.toFixed(2)}</div>
+                <div class="${pnl >= 0 ? 'profit' : 'loss'}">
+                    ${pnl >= 0 ? '+' : '-'}$${Math.abs(pnl).toFixed(2)} (${(invested > 0 ? (pnl / invested * 100).toFixed(2) : '0.00')}%)
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <div class="exit-btn" onclick="exitTrade('${trade.symbol}', '${trade.timestamp}', 'usStocks')">
+                    Exit
+                </div>
+                <div class="edit-btn" onclick="editTradeLimits('${trade.symbol}', 'usStocks')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </div>
+            </div>`;
+        activitySection.appendChild(stockItem);
+    });
+
+    localStorage.setItem('trades', JSON.stringify(activeTrades));
+    updateUSStocksSummary(totalInvested, totalCurrent, totalPnL);
+}
+
+// Update US stocks summary (unchanged)
+function updateUSStocksSummary(invested, current, pnl) {
+    const investedEl = document.querySelector('#usStocks .info-section span:nth-child(1) b:last-child');
+    const currentEl = document.querySelector('#usStocks .info-section span:nth-child(2) b:last-child');
+    const pnlEl = document.querySelector('#usStocks .info-section span:nth-child(3) b:last-child');
+    if (!investedEl || !currentEl || !pnlEl) return;
+
+    const prevInvested = parseFloat(investedEl.textContent.replace('$', '')) || 0;
+    const prevCurrent = parseFloat(currentEl.textContent.replace('$', '')) || 0;
+
+    animateValue(investedEl, prevInvested, invested, 300, '$');
+    animateValue(currentEl, prevCurrent, current, 300, '$');
+
+    const pnlPercentage = invested > 0 ? ((pnl / invested) * 100).toFixed(2) : 0;
+    const sign = pnl >= 0 ? '+' : '-';
+    pnlEl.textContent = `$${sign}${Math.abs(pnl).toFixed(2)} (${pnlPercentage}%)`;
+    pnlEl.className = pnl >= 0 ? 'profit mt-1' : 'loss mt-1';
+    pnlEl.classList.add('number-animate');
+    setTimeout(() => pnlEl.classList.remove('number-animate'), 300);
+}
+
+// Exit all US stocks
+function exitAllUSStocks() {
+    if (!isUSMarketOpen()) {
+        alert('US market is closed! Can only exit trades between 9:30 AM and 4:00 PM EST/EDT');
+        return;
+    }
+    if (!confirm('Are you sure you want to exit all US stock trades?')) return;
+    const usStocksTrades = activeTrades.filter(t => t.type === 'usStocks' && !t.completed);
+    if (usStocksTrades.length === 0) {
+        alert('No open US stock trades to exit.');
+        return;
+    }
+    usStocksTrades.forEach(trade => {
+        trade.completed = true;
+        if (trade.action === 'SELL') trade.price_buy = trade.currentPrice;
+        else trade.price_sell = trade.currentPrice;
+        trade.timestamp_close = new Date().toISOString();
+    });
+    localStorage.setItem('trades', JSON.stringify(activeTrades));
+    alert(`${usStocksTrades.length} US stock trades exited successfully!`);
+    updateUSStocksSection();
+    updateActivitySection();
+}
+
+// Exit a specific US trade
+function exitUSTrade(symbol, timestamp, type) {
+    if (type === 'usStocks' && !isUSMarketOpen()) {
+        alert('US market is closed! Can only exit trades between 9:30 AM and 4:00 PM EST/EDT');
+        return;
+    }
+    if (!confirm('Are you sure you want to exit this trade?')) return;
+    let tradesExited = 0;
+    if (timestamp) {
+        const trade = activeTrades.find(t => t.symbol === symbol && t.timestamp === timestamp && !t.completed);
+        if (trade) {
+            trade.completed = true;
+            if (trade.action === 'SELL') trade.price_buy = trade.currentPrice;
+            else trade.price_sell = trade.currentPrice;
+            trade.timestamp_close = new Date().toISOString();
+            tradesExited = 1;
+        }
+    } else {
+        const trades = activeTrades.filter(t => t.symbol === symbol && t.type === type && !t.completed);
+        trades.forEach(trade => {
+            trade.completed = true;
+            if (trade.action === 'SELL') trade.price_buy = trade.currentPrice;
+            else trade.price_sell = trade.currentPrice;
+            trade.timestamp_close = new Date().toISOString();
+        });
+        tradesExited = trades.length;
+    }
+    if (tradesExited > 0) {
+        localStorage.setItem('trades', JSON.stringify(activeTrades));
+        updateUSStocksSection();
+        updateActivitySection();
+        alert(`${tradesExited} trade${tradesExited > 1 ? 's' : ''} exited successfully!`);
+    } else {
+        alert('No trades found to exit.');
+    }
+}
+
+// Edit trade limits for US stocks
+function editUSTradeLimits(symbol, type) {
+    const tradesToEdit = activeTrades.filter(t => t.type === type && t.symbol === symbol && !t.completed);
+    if (tradesToEdit.length === 0) {
+        alert(`No active ${type} trades found for this stock.`);
+        return;
+    }
+    const currency = type === 'usStocks' ? '$' : '₹';
+    const newStopLoss = prompt(`Enter new Stop Loss for ${symbol} (Current: ${tradesToEdit[0].stopLoss ? currency + tradesToEdit[0].stopLoss.toFixed(2) : 'Not Set'})`, tradesToEdit[0].stopLoss || '');
+    const newTargetProfit = prompt(`Enter new Target Profit for ${symbol} (Current: ${tradesToEdit[0].targetProfit ? currency + tradesToEdit[0].targetProfit.toFixed(2) : 'Not Set'})`, tradesToEdit[0].targetProfit || '');
+    if (newStopLoss !== null && newTargetProfit !== null) {
+        const stopLossValue = parseFloat(newStopLoss) || 0;
+        const targetProfitValue = parseFloat(newTargetProfit) || 0;
+        tradesToEdit.forEach(trade => {
+            trade.stopLoss = stopLossValue;
+            trade.targetProfit = targetProfitValue;
+        });
+        localStorage.setItem('trades', JSON.stringify(activeTrades));
+        updateUSStocksSection();
+        updateActivitySection();
+        alert(`Updated SL and TP for ${symbol} (${type})`);
+    }
+}
+
+// Animate value with fallback
+function animateValue(element, start, end, duration, prefix = '') {
+    if (!element) return;
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const value = start + (end - start) * progress;
+        element.textContent = `${prefix}${value.toFixed(2)}`;
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    element.classList.add('number-animate');
+    window.requestAnimationFrame(step);
+    setTimeout(() => element.classList.remove('number-animate'), duration);
+}
+
+// Helper functions (assumed existing)
+function showLoader() {
+    // Implement to show a loading spinner
+    console.log('Loading...');
+}
+
+function hideLoader() {
+    // Implement to hide the loading spinner
+    console.log('Loading done');
+}
+
+function selectStock(symbol, name, type) {
+    // Implement to select stock and populate trade form
+    console.log(`Selected ${symbol} (${name}) for ${type}`);
+}
+
+function resetTradeForm() {
+    // Implement to reset trade form fields
+    console.log('Trade form reset');
+}
+
+function closeTradePanel(event) {
+    // Implement to close trade panel
+    console.log('Trade panel closed');
+}
+
+function updateActivitySection() {
+    // Implement to update activity section
+    console.log('Activity section updated');
+}
