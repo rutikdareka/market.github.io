@@ -1170,8 +1170,6 @@ function updateActivitySection() {
     updateActivitySummary(totalTrades, completedTrades, netPL, netPLPercentage);
 }
 
-    updateActivitySummary(totalTrades, completedTrades, netPL, netPLPercentage);
-}
 
 function updateIntradaySummary(invested, current, totalPnL) {
     const intradayTab = document.getElementById('intraday');
