@@ -1322,7 +1322,7 @@ const US_MARKET_OPEN = { hours: 9, minutes: 30 }; // 9:30 AM EST/EDT
 const US_MARKET_CLOSE = { hours: 16, minutes: 0 }; // 4:00 PM EST/EDT
 let priceUSUpdateIntervalId = null;
 const liveUSPrices = new Map(); // Initialize livePrices globally
-const activeTrades = JSON.parse(localStorage.getItem('trades')) || []; // Initialize activeTrades
+const activeUSTrades = JSON.parse(localStorage.getItem('trades')) || []; // Initialize activeTrades
 
 // DST-aware US market open check
 function isUSMarketOpen() {
@@ -1501,17 +1501,17 @@ function handleUSTradeSubmit(type, isBuy) {
                 currency: 'USD'
             };
 
-            const oppositeTrade = activeTrades.find(t => t.symbol === tradeData.symbol && t.type === type && t.action !== tradeData.action && !t.completed);
+            const oppositeTrade = activeUSTrades.find(t => t.symbol === tradeData.symbol && t.type === type && t.action !== tradeData.action && !t.completed);
             if (oppositeTrade) {
                 oppositeTrade.completed = true;
                 oppositeTrade.price_sell = !isBuy ? latestPrice : oppositeTrade.price_sell;
                 oppositeTrade.price_buy = isBuy ? effectiveBuyPrice : oppositeTrade.price_buy;
                 tradeData.completed = true;
             } else {
-                activeTrades.push(tradeData);
+                activeUSTrades.push(tradeData);
             }
 
-            localStorage.setItem('trades', JSON.stringify(activeTrades));
+            localStorage.setItem('trades', JSON.stringify(activeUSTrades));
             updateUSStocksSection();
             updateActivitySection();
             closeTradePanel(new Event('click'));
@@ -1532,7 +1532,7 @@ function updateUSStocksSection() {
     if (!activitySection) return;
     activitySection.innerHTML = '';
 
-    const usStocksTrades = activeTrades.filter(t => t.type === 'usStocks' && !t.completed);
+    const usStocksTrades = activeUSTrades.filter(t => t.type === 'usStocks' && !t.completed);
     if (usStocksTrades.length === 0) {
         activitySection.innerHTML = '<div class="text-gray-400 p-4">No US stocks yet.</div>';
         updateUSStocksSummary(0, 0, 0);
@@ -1643,7 +1643,7 @@ function updateUSStocksSection() {
         activitySection.appendChild(stockItem);
     });
 
-    localStorage.setItem('trades', JSON.stringify(activeTrades));
+    localStorage.setItem('trades', JSON.stringify(activeUSTrades));
     updateUSStocksSummary(totalInvested, totalCurrent, totalPnL);
 }
 
@@ -1675,7 +1675,7 @@ function exitAllUSStocks() {
         return;
     }
     if (!confirm('Are you sure you want to exit all US stock trades?')) return;
-    const usStocksTrades = activeTrades.filter(t => t.type === 'usStocks' && !t.completed);
+    const usStocksTrades = activeUSTrades.filter(t => t.type === 'usStocks' && !t.completed);
     if (usStocksTrades.length === 0) {
         alert('No open US stock trades to exit.');
         return;
@@ -1686,7 +1686,7 @@ function exitAllUSStocks() {
         else trade.price_sell = trade.currentPrice;
         trade.timestamp_close = new Date().toISOString();
     });
-    localStorage.setItem('trades', JSON.stringify(activeTrades));
+    localStorage.setItem('trades', JSON.stringify(activeUSTrades));
     alert(`${usStocksTrades.length} US stock trades exited successfully!`);
     updateUSStocksSection();
     updateActivitySection();
@@ -1701,7 +1701,7 @@ function exitUSTrade(symbol, timestamp, type) {
     if (!confirm('Are you sure you want to exit this trade?')) return;
     let tradesExited = 0;
     if (timestamp) {
-        const trade = activeTrades.find(t => t.symbol === symbol && t.timestamp === timestamp && !t.completed);
+        const trade = activeUSTrades.find(t => t.symbol === symbol && t.timestamp === timestamp && !t.completed);
         if (trade) {
             trade.completed = true;
             if (trade.action === 'SELL') trade.price_buy = trade.currentPrice;
@@ -1710,7 +1710,7 @@ function exitUSTrade(symbol, timestamp, type) {
             tradesExited = 1;
         }
     } else {
-        const trades = activeTrades.filter(t => t.symbol === symbol && t.type === type && !t.completed);
+        const trades = activeUSTrades.filter(t => t.symbol === symbol && t.type === type && !t.completed);
         trades.forEach(trade => {
             trade.completed = true;
             if (trade.action === 'SELL') trade.price_buy = trade.currentPrice;
@@ -1720,7 +1720,7 @@ function exitUSTrade(symbol, timestamp, type) {
         tradesExited = trades.length;
     }
     if (tradesExited > 0) {
-        localStorage.setItem('trades', JSON.stringify(activeTrades));
+        localStorage.setItem('trades', JSON.stringify(activeUSTrades));
         updateUSStocksSection();
         updateActivitySection();
         alert(`${tradesExited} trade${tradesExited > 1 ? 's' : ''} exited successfully!`);
@@ -1731,7 +1731,7 @@ function exitUSTrade(symbol, timestamp, type) {
 
 // Edit trade limits for US stocks
 function editUSTradeLimits(symbol, type) {
-    const tradesToEdit = activeTrades.filter(t => t.type === type && t.symbol === symbol && !t.completed);
+    const tradesToEdit = activeUSTrades.filter(t => t.type === type && t.symbol === symbol && !t.completed);
     if (tradesToEdit.length === 0) {
         alert(`No active ${type} trades found for this stock.`);
         return;
@@ -1746,7 +1746,7 @@ function editUSTradeLimits(symbol, type) {
             trade.stopLoss = stopLossValue;
             trade.targetProfit = targetProfitValue;
         });
-        localStorage.setItem('trades', JSON.stringify(activeTrades));
+        localStorage.setItem('trades', JSON.stringify(activeUSTrades));
         updateUSStocksSection();
         updateActivitySection();
         alert(`Updated SL and TP for ${symbol} (${type})`);
