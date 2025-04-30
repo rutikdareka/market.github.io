@@ -55,7 +55,8 @@ const priceUpdateInterval = 1000;
 let livePrices = new Map();
 let activeTrades = [];
 
-const INTRADAY_OPEN = { hours: 9, minutes: 15 };
+const IN
+    TRADAY_OPEN = { hours: 9, minutes: 15 };
 const INTRADAY_CLOSE = { hours: 15, minutes: 15 };
 const HOLDING_CLOSE = { hours: 15, minutes: 30 };
 
