@@ -300,6 +300,7 @@ function startPriceUpdates() {
                     .catch(error => {
                         console.error(`Failed to update price for ${symbol}:`, error);
                     });
+            } // <-- this was the missing closing brace
 
             if (pricesUpdated) {
                 updateIntradaySection();
@@ -373,6 +374,7 @@ function startPriceUpdates() {
         }
     }, priceUpdateInterval);
 }
+
 
 document.addEventListener('click', (e) => {
     if (!e.target.closest('#stockSymbol') && !e.target.closest('#searchResultsContainer')) {
