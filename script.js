@@ -168,7 +168,7 @@ function displayUSSearchResults(results) {
     }
 }
 
-function selectStock(symbol, name, ...args) {
+async function selectStock(symbol, name, ...args) {
     const type = args[0] || (symbol.includes(':') ? 'usStocks' : 'intraday');
     const isUSStock = type === 'usStocks';
     const symbolInput = document.getElementById(isUSStock ? 'usStockSymbol' : 'stockSymbol');
