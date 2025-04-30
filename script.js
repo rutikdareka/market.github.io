@@ -107,7 +107,8 @@ function displaySearchResults(data) {
     }
 }
 
-async function selectStock(symbol, name) {
+function selectStock(symbol, name, ...args) {
+    const type = args[0] || (symbol.includes(':') ? 'usStocks' : 'intraday'); // Default to 'intraday' for Indian stocks, 'usStocks' for US stocks (detected by colon in symbol)
     const symbolInput = document.getElementById('stockSymbol');
     const priceInput = document.getElementById('price');
     symbolInput.value = symbol;
@@ -115,21 +116,24 @@ async function selectStock(symbol, name) {
 
     try {
         showLoader();
-        const price = await fetchLatestPrice(symbol); // Fetch real-time price
-        if (price > 0) {
-            priceInput.value = formatIndianNumber(price); // Use Indian formatting
-            livePrices.set(symbol, price); // Update the live prices map
-            startPriceUpdateForInput(symbol, priceInput)
-
+        let price;
+        if (type === 'usStocks') {
+            price = await fetchUSLatestPrice(symbol);
+            priceInput.value = price > 0 ? `$${price.toFixed(2)}` : 'N/A';
+            startUSPriceUpdateForInput(symbol, priceInput);
         } else {
-            priceInput.value = 'N/A';
+            price = await fetchLatestPrice(symbol);
+            priceInput.value = price > 0 ? formatIndianNumber(price) : 'N/A';
+            startPriceUpdateForInput(symbol, priceInput);
         }
-        // Store the stock name in a data attribute for later use
+        if (price > 0) {
+            livePrices.set(symbol, price);
+        }
         symbolInput.dataset.stockName = name;
-        hideLoader();
     } catch (error) {
         console.error('Error in selectStock:', error);
         priceInput.value = 'N/A';
+    } finally {
         hideLoader();
     }
 }
