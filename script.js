@@ -144,9 +144,9 @@ function fetchUSStockSymbols(query) {
 function displayUSSearchResults(results) {
     const resultsContainer = document.getElementById('usSearchResultsContainer');
     const resultsList = document.getElementById('usSearchResults');
-    if (!resultsContainer || !resultsList) return;
-
     resultsList.innerHTML = '';
+    console.log('US Search Results:', results); // Add this to debug
+
     if (results && Array.isArray(results) && results.length > 0) {
         resultsContainer.classList.remove('hidden');
         results.forEach(item => {
@@ -154,8 +154,7 @@ function displayUSSearchResults(results) {
             li.className = 'px-4 py-2 hover:bg-gray-700 cursor-pointer text-white';
             const stockName = item.description || item.displaySymbol;
             const stockSymbol = item.symbol;
-            const sector = item.type || 'US Stock';
-            li.innerHTML = `<div class="flex flex-col"><span class="font-medium truncate">${stockName} (${stockSymbol})</span><span class="text-xs text-gray-400">${sector}</span></div>`;
+            li.innerHTML = `<div class="flex flex-col"><span class="font-medium truncate">${stockName} (${stockSymbol})</span></div>`;
             li.addEventListener('click', () => selectStock(stockSymbol, stockName, 'usStocks'));
             resultsList.appendChild(li);
         });
