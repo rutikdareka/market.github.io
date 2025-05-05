@@ -107,51 +107,65 @@ function displaySearchResults(data) {
 }
 
 async function fetchDiscoveryData() {
-    const apiUrl = 'https://groww.in/v1/api/stocks_data/v2/explore/list/top?discoveryFilterTypes=TOP_GAINERS%2CTOP_LOSERS%2CPOPULAR_STOCKS_MOST_BOUGHT_MTF&page=0&size=10';
+    const apiUrl = 'https://groww.in/v1/api/stocks_data/v2/explore/list/top?discoveryFilterTypes=TOP_GAINERS,TOP_LOSERS,POPULAR_STOCKS_MOST_BOUGHT_MTF&page=0&size=10';
     const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(apiUrl);
 
     try {
+        // Fetch and parse the response
         const response = await fetch(proxyUrl);
         if (!response.ok) throw new Error('Network response was not ok');
 
         const result = await response.json();
         const data = JSON.parse(result.contents); // allorigins wraps it in `contents`
 
-        // --- TOP GAINERS ---
-        const topGainers = data.sections.find(s => s.sectionId === 'TOP_GAINERS')?.items || [];
-        document.getElementById('topGainersList').innerHTML = topGainers.map(stock => `
-            <div class="stock-card">
-                <span>${stock.companyName} (${stock.symbol})</span>
-                <span class="positive">+${stock.percentageChange.toFixed(2)}% (₹${stock.currentPrice.toFixed(2)})</span>
-            </div>
-        `).join('');
+        // Function to render stock data to the DOM
+        const renderStocks = (stocks, containerId, isPositive = true) => {
+            const container = document.getElementById(containerId);
+            if (!container) return;
 
-        // --- TOP LOSERS ---
-        const topLosers = data.sections.find(s => s.sectionId === 'TOP_LOSERS')?.items || [];
-        document.getElementById('topLosersList').innerHTML = topLosers.map(stock => `
-            <div class="stock-card">
-                <span>${stock.companyName} (${stock.symbol})</span>
-                <span class="negative">${stock.percentageChange.toFixed(2)}% (₹${stock.currentPrice.toFixed(2)})</span>
-            </div>
-        `).join('');
+            container.innerHTML = stocks.map(stock => `
+                <div class="stock-card">
+                    <span>${stock.company.companyName} (${stock.company.nseScriptCode || stock.company.bseScriptCode})</span>
+                    <span class="${isPositive ? 'positive' : 'negative'}">
+                        ${isPositive ? '+' : ''}${stock.stats.dayChangePerc.toFixed(2)}% (₹${stock.stats.ltp.toFixed(2)})
+                    </span>
+                </div>
+            `).join('');
+        };
 
-        // --- POPULAR STOCKS ---
-        const popularStocks = data.sections.find(s => s.sectionId === 'POPULAR_STOCKS_MOST_BOUGHT_MTF')?.items || [];
-        document.getElementById('popularStocksList').innerHTML = popularStocks.map(stock => `
-            <div class="stock-card">
-                <span>${stock.companyName} (${stock.symbol})</span>
-                <span>₹${stock.currentPrice.toFixed(2)} (${stock.percentageChange.toFixed(2)}%)</span>
-            </div>
-        `).join('');
+        // Extract stock sections from the API response
+        const sections = data.exploreCompanies || {};
+
+        // Render Top Gainers
+        const topGainers = sections.TOP_GAINERS || [];
+        renderStocks(topGainers, 'topGainersList', true);
+
+        // Render Top Losers
+        const topLosers = sections.TOP_LOSERS || [];
+        renderStocks(topLosers, 'topLosersList', false);
+
+        // Render Popular Stocks
+        const popularStocks = sections.POPULAR_STOCKS_MOST_BOUGHT_MTF || [];
+        renderStocks(popularStocks, 'popularStocksList', true);
     } catch (error) {
         console.error('Error fetching data:', error);
-        document.getElementById('topGainersList').innerHTML = '<p class="text-red-500">Failed to load Top Gainers</p>';
-        document.getElementById('topLosersList').innerHTML = '<p class="text-red-500">Failed to load Top Losers</p>';
-        document.getElementById('popularStocksList').innerHTML = '<p class="text-red-500">Failed to load Popular Stocks</p>';
+
+        // Error message for each section
+        const setError = (containerId) => {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = '<p class="text-red-500">Failed to load data</p>';
+            }
+        };
+
+        setError('topGainersList');
+        setError('topLosersList');
+        setError('popularStocksList');
     }
 }
 
-fetchDiscoveryData()
+// Call the function
+fetchDiscoveryData();
 
 async function selectStock(symbol, name) {
     const symbolInput = document.getElementById('stockSymbol');
