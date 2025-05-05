@@ -106,54 +106,48 @@ function displaySearchResults(data) {
     }
 }
 
-// Function to fetch and map Discovery tab data using a CORS proxy
 async function fetchDiscoveryData() {
     const apiUrl = 'https://groww.in/v1/api/stocks_data/v2/explore/list/top?discoveryFilterTypes=TOP_GAINERS%2CTOP_LOSERS%2CPOPULAR_STOCKS_MOST_BOUGHT_MTF&page=0&size=10';
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    const url = proxyUrl + apiUrl; // Prepend proxy URL to bypass CORS
-    try {
-        const response = await fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest' // Required by some proxies
-            }
-        });
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(apiUrl);
 
-        // Map data for Top Gainers
-        const topGainers = data.sections.find(section => section.sectionId === 'TOP_GAINERS')?.items || [];
-        const topGainersList = document.getElementById('topGainersList');
-        topGainersList.innerHTML = topGainers.map(stock => `
+    try {
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error('Network response was not ok');
+
+        const result = await response.json();
+        const data = JSON.parse(result.contents); // allorigins wraps it in `contents`
+
+        // --- TOP GAINERS ---
+        const topGainers = data.sections.find(s => s.sectionId === 'TOP_GAINERS')?.items || [];
+        document.getElementById('topGainersList').innerHTML = topGainers.map(stock => `
             <div class="stock-card">
                 <span>${stock.companyName} (${stock.symbol})</span>
                 <span class="positive">+${stock.percentageChange.toFixed(2)}% (₹${stock.currentPrice.toFixed(2)})</span>
             </div>
         `).join('');
 
-        // Map data for Top Losers
-        const topLosers = data.sections.find(section => section.sectionId === 'TOP_LOSERS')?.items || [];
-        const topLosersList = document.getElementById('topLosersList');
-        topLosersList.innerHTML = topLosers.map(stock => `
+        // --- TOP LOSERS ---
+        const topLosers = data.sections.find(s => s.sectionId === 'TOP_LOSERS')?.items || [];
+        document.getElementById('topLosersList').innerHTML = topLosers.map(stock => `
             <div class="stock-card">
                 <span>${stock.companyName} (${stock.symbol})</span>
                 <span class="negative">${stock.percentageChange.toFixed(2)}% (₹${stock.currentPrice.toFixed(2)})</span>
             </div>
         `).join('');
 
-        // Map data for Popular Stocks
-        const popularStocks = data.sections.find(section => section.sectionId === 'POPULAR_STOCKS_MOST_BOUGHT_MTF')?.items || [];
-        const popularStocksList = document.getElementById('popularStocksList');
-        popularStocksList.innerHTML = popularStocks.map(stock => `
+        // --- POPULAR STOCKS ---
+        const popularStocks = data.sections.find(s => s.sectionId === 'POPULAR_STOCKS_MOST_BOUGHT_MTF')?.items || [];
+        document.getElementById('popularStocksList').innerHTML = popularStocks.map(stock => `
             <div class="stock-card">
                 <span>${stock.companyName} (${stock.symbol})</span>
                 <span>₹${stock.currentPrice.toFixed(2)} (${stock.percentageChange.toFixed(2)}%)</span>
             </div>
         `).join('');
     } catch (error) {
-        console.error('Error fetching discovery data:', error);
-        document.getElementById('topGainersList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
-        document.getElementById('topLosersList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
-        document.getElementById('popularStocksList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
+        console.error('Error fetching data:', error);
+        document.getElementById('topGainersList').innerHTML = '<p class="text-red-500">Failed to load Top Gainers</p>';
+        document.getElementById('topLosersList').innerHTML = '<p class="text-red-500">Failed to load Top Losers</p>';
+        document.getElementById('popularStocksList').innerHTML = '<p class="text-red-500">Failed to load Popular Stocks</p>';
     }
 }
 
