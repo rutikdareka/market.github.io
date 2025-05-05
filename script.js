@@ -143,7 +143,7 @@ async function fetchDiscoveryData() {
                 <span>₹${stock.currentPrice.toFixed(2)} (${stock.percentageChange.toFixed(2)}%)</span>
             </div>
         `).join('');
-    } catch (error)           console.error('Error fetching discovery data:', error);
+    } catch (error){
         document.getElementById('topGainersList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
         document.getElementById('topLosersList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
         document.getElementById('popularStocksList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
