@@ -151,6 +151,8 @@ async function fetchDiscoveryData() {
     }
 }
 
+fetchDiscoveryData()
+
 async function selectStock(symbol, name) {
     const symbolInput = document.getElementById('stockSymbol');
     const priceInput = document.getElementById('price');
