@@ -9,30 +9,64 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-  .footer-links {
-    text-align: center;
-    margin-top: 200px;
-    padding: 20px 0;
-  }
+        .footer-links {
+            text-align: center;
+            margin-top: 200px;
+            padding: 20px 0;
+        }
 
-  .nav-btn {
-    display: inline-block;
-    margin: 8px 12px;
-    padding: 10px 20px;
-    color: white;
-    border: 2px solid #e63946;
-    border-radius: 30px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
+        .nav-btn {
+            display: inline-block;
+            margin: 8px 12px;
+            padding: 10px 20px;
+            color: white;
+            border: 2px solid #e63946;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
 
-  .nav-btn:hover {
-    background-color: #red;
-    color: white;
-  }
-</style>
+        .nav-btn:hover {
+            background-color: #e63946;
+            color: white;
+        }
 
+        /* Styles for Discovery Tab */
+        .discovery-section {
+            margin-bottom: 2rem;
+        }
+
+        .discovery-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .stock-card {
+            background-color: #1f2937;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-card span {
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+
+        .stock-card .positive {
+            color: #22c55e;
+        }
+
+        .stock-card .negative {
+            color: #ef4444;
+        }
+    </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4650463573348937" crossorigin="anonymous"></script>
 </head>
 <body class="text-white">
@@ -105,15 +139,34 @@
         <!-- Tabs -->
         <div class="flex flex-col items-center mt-8 p-4 tab-container">
             <div class="flex flex-wrap justify-center gap-4">
-                <button class="tab-button active" onclick="openTab('intraday', this)">Intraday</button>
+                <button class="tab-button active" onclick="openTab('discovery', this)">Discovery</button>
+                <button class="tab-button" onclick="openTab('intraday', this)">Intraday</button>
                 <button class="tab-button" onclick="openTab('holding', this)">Holding</button>
                 <button class="tab-button" onclick="openTab('usStocks', this)">US Stocks</button>
                 <button class="tab-button" onclick="openTab('activity', this)">Activity</button>
             </div>
         </div>
 
+        <!-- Discovery Tab -->
+        <div id="discovery" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center">
+            <div class="w-[500px]">
+                <div class="discovery-section" id="topGainers">
+                    <h3>Top Gainers</h3>
+                    <div id="topGainersList"></div>
+                </div>
+                <div class="discovery-section" id="topLosers">
+                    <h3>Top Losers</h3>
+                    <div id="topLosersList"></div>
+                </div>
+                <div class="discovery-section" id="popularStocks">
+                    <h3>Popular Stocks</h3>
+                    <div id="popularStocksList"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Intraday Tab -->
-        <div id="intraday" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center">
+        <div id="intraday" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center hidden">
             <div class="w-[500px]">
                 <div class="w-[450px] mb-2.5 flex justify-end items-center">
                     <button class="new-button" onmousedown="this.style.transform='scale(0.9)';" onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';" onclick="toggleTradePanel('intraday')">
@@ -247,7 +300,8 @@
                             <input type="number" id="usQuantity" placeholder="Qty" class="search-input w-full" required min="1">
                         </div>
                     </div>
-                    <div class="flex gap-4">
+                    <div class="flex‬
+                    gap-4">
                         <div class="input-group flex-1">
                             <label class="block text-sm font-medium mb-2 text-gray-300">Latest Price</label>
                             <input type="text" id="usPrice" placeholder="Auto" class="search-input w-full" disabled>
@@ -276,17 +330,16 @@
         </div>
     </div>
 
-<div class="footer-links">
-  <a href="/about.html" class="nav-btn">About Us</a>
-  <a href="/privacy.html" class="nav-btn">Privacy Policy</a>
-  <a href="/terms.html" class="nav-btn">Terms and Conditions</a>
-  <a href="/contact.html" class="nav-btn">Contact Us</a>
-</div>
-
+    <div class="footer-links">
+        <a href="/about.html" class="nav-btn">About Us</a>
+        <a href="/privacy.html" class="nav-btn">Privacy Policy</a>
+        <a href="/terms.html" class="nav-btn">Terms and Conditions</a>
+        <a href="/contact.html" class="nav-btn">Contact Us</a>
+    </div>
 
     <script src="script.js"></script>
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-YG7Q4JJLH9"></script>
+    <!-- Google tag (gtag.js) -->
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
@@ -295,3 +348,6 @@
     </script>
 </body>
 </html>
+
+
+   
