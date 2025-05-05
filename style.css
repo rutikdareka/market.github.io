@@ -1333,3 +1333,62 @@
     border: 1px solid #333;
     z-index: 1000; /* Ensure it’s above other elements */
 }
+
+
+.footer-links {
+    text-align: center;
+    margin-top: 200px;
+    padding: 20px 0;
+}
+
+.nav-btn {
+    display: inline-block;
+    margin: 8px 12px;
+    padding: 10px 20px;
+    color: white;
+    border: 2px solid #e63946;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+    background-color: #e63946;
+    color: white;
+}
+
+/* Styles for Discovery Tab */
+.discovery-section {
+    margin-bottom: 2rem;
+}
+
+.discovery-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+.stock-card {
+    background-color: #1f2937;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stock-card span {
+    font-size: 0.9rem;
+    color: #d1d5db;
+}
+
+.stock-card .positive {
+    color: #22c55e;
+}
+
+.stock-card .negative {
+    color: #ef4444;
+}
