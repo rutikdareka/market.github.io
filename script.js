@@ -106,11 +106,17 @@ function displaySearchResults(data) {
     }
 }
 
-// Function to fetch and map Discovery tab data
+// Function to fetch and map Discovery tab data using a CORS proxy
 async function fetchDiscoveryData() {
-    const url = 'https://groww.in/v1/api/stocks_data/v2/explore/list/top?discoveryFilterTypes=TOP_GAINERS%2CTOP_LOSERS%2CPOPULAR_STOCKS_MOST_BOUGHT_MTF&page=0&size=10';
+    const apiUrl = 'https://groww.in/v1/api/stocks_data/v2/explore/list/top?discoveryFilterTypes=TOP_GAINERS%2CTOP_LOSERS%2CPOPULAR_STOCKS_MOST_BOUGHT_MTF&page=0&size=10';
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    const url = proxyUrl + apiUrl; // Prepend proxy URL to bypass CORS
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest' // Required by some proxies
+            }
+        });
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
 
@@ -143,7 +149,8 @@ async function fetchDiscoveryData() {
                 <span>₹${stock.currentPrice.toFixed(2)} (${stock.percentageChange.toFixed(2)}%)</span>
             </div>
         `).join('');
-    } catch (error){
+    } catch (error) {
+        console.error('Error fetching discovery data:', error);
         document.getElementById('topGainersList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
         document.getElementById('topLosersList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
         document.getElementById('popularStocksList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
