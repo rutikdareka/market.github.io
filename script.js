@@ -282,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('appContent').classList.add('hidden');
     }
     hideSplashScreen();
+    fetchDiscoveryData()
     startPriceUpdates();
     activeTrades = JSON.parse(localStorage.getItem('trades') || '[]');
     updateIntradaySection();
