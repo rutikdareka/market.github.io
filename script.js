@@ -106,6 +106,50 @@ function displaySearchResults(data) {
     }
 }
 
+// Function to fetch and map Discovery tab data
+async function fetchDiscoveryData() {
+    const url = 'https://groww.in/v1/api/stocks_data/v2/explore/list/top?discoveryFilterTypes=TOP_GAINERS%2CTOP_LOSERS%2CPOPULAR_STOCKS_MOST_BOUGHT_MTF&page=0&size=10';
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+
+        // Map data for Top Gainers
+        const topGainers = data.sections.find(section => section.sectionId === 'TOP_GAINERS')?.items || [];
+        const topGainersList = document.getElementById('topGainersList');
+        topGainersList.innerHTML = topGainers.map(stock => `
+            <div class="stock-card">
+                <span>${stock.companyName} (${stock.symbol})</span>
+                <span class="positive">+${stock.percentageChange.toFixed(2)}% (₹${stock.currentPrice.toFixed(2)})</span>
+            </div>
+        `).join('');
+
+        // Map data for Top Losers
+        const topLosers = data.sections.find(section => section.sectionId === 'TOP_LOSERS')?.items || [];
+        const topLosersList = document.getElementById('topLosersList');
+        topLosersList.innerHTML = topLosers.map(stock => `
+            <div class="stock-card">
+                <span>${stock.companyName} (${stock.symbol})</span>
+                <span class="negative">${stock.percentageChange.toFixed(2)}% (₹${stock.currentPrice.toFixed(2)})</span>
+            </div>
+        `).join('');
+
+        // Map data for Popular Stocks
+        const popularStocks = data.sections.find(section => section.sectionId === 'POPULAR_STOCKS_MOST_BOUGHT_MTF')?.items || [];
+        const popularStocksList = document.getElementById('popularStocksList');
+        popularStocksList.innerHTML = popularStocks.map(stock => `
+            <div class="stock-card">
+                <span>${stock.companyName} (${stock.symbol})</span>
+                <span>₹${stock.currentPrice.toFixed(2)} (${stock.percentageChange.toFixed(2)}%)</span>
+            </div>
+        `).join('');
+    } catch (error)           console.error('Error fetching discovery data:', error);
+        document.getElementById('topGainersList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
+        document.getElementById('topLosersList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
+        document.getElementById('popularStocksList').innerHTML = '<p class="text-red-500">Failed to load data</p>';
+    }
+}
+
 async function selectStock(symbol, name) {
     const symbolInput = document.getElementById('stockSymbol');
     const priceInput = document.getElementById('price');
