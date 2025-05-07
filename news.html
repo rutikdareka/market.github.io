@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta charset="UTF-8">
+  <title>Latest Stock Market News - NowTrade</title>
+  <meta name="description" content="Get the latest stock market news including company performance, sectors, industries and financial highlights updated daily.">
+  <meta name="keywords" content="stock news, stock market, company results, financial news, stockedge API, trading news, Indian market">
+  <meta name="author" content="NowTrade Team">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Open Graph for social media -->
+  <meta property="og:title" content="Latest Stock Market News - NowTrade">
+  <meta property="og:description" content="Stay updated with the most recent stock news from Indian companies.">
+  <meta property="og:image" content="https://firebasestorage.googleapis.com/v0/b/creto-64dd5.appspot.com/o/ChatGPT%20Image%20May%207%2C%202025%2C%2012_39_49%20PM.png?alt=media&token=dbd01bba-9b7f-486d-b93e-447eaaa08f5a">
+  <meta property="og:url" content="https://nowtrade.vercel.app/">
+  <meta property="og:type" content="website">
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin-top: 30px;
+    }
+    .news-container {
+      max-width: 800px;
+      width: 90%;
+      margin-top: 20px;
+    }
+    .news-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .news-card img {
+      max-width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .info {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+    }
+    .load-more {
+      margin: 30px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .load-more:hover {
+      background: #388e3c;
+    }
+  </style>
+</head>
+<body>
+  <h1>📰 Stock Market News</h1>
+  <div class="news-container" id="newsContainer"></div>
+  <button class="load-more" id="loadMoreBtn">Load More</button>
+
+  <script>
+    let page = 1;
+
+    async function fetchNews() {
+      const url = `https://api.stockedge.com/Api/DailyDashboardApi/GetLatestNewsItems?page=${page}&pageSize=10&lang=en`;
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        data.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'news-card';
+
+          const industry = item.NewsitemIndustries[0];
+          const sector = item.NewsitemSectors[0];
+          const security = item.NewsitemSecurities[0];
+
+          card.innerHTML = `
+            <h3>${item.Description}</h3>
+            ${industry?.IndustryImageUrl ? `<img src="${industry.IndustryImageUrl}" alt="${industry.IndustryName}">` : ''}
+            <div class="info">
+              <strong>Company:</strong> ${security?.SecurityName || 'N/A'}<br>
+              <strong>Sector:</strong> ${sector?.SectorName || 'N/A'}<br>
+              <strong>Industry:</strong> ${industry?.IndustryName || 'N/A'}<br>
+              <strong>Date:</strong> ${new Date(item.Date).toLocaleDateString()}
+            </div>
+          `;
+          document.getElementById('newsContainer').appendChild(card);
+        });
+
+        page++; // next page on next click
+      } catch (err) {
+        alert("Error fetching news: " + err.message);
+      }
+    }
+
+    document.getElementById('loadMoreBtn').addEventListener('click', fetchNews);
+
+    // Auto-load first batch
+    fetchNews();
+  </script>
+</body>
+</html>
