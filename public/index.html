@@ -1,1 +1,612 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="ca-pub-4650463573348937">
+    <title>TrackMoney</title>
+    <!-- Adding the favicon -->
+    <link rel="icon" href="https://firebasestorage.googleapis.com/v0/b/creto-64dd5.appspot.com/o/ChatGPT%20Image%20May%207%2C%202025%2C%2012_39_49%20PM.png?alt=media&token=dbd01bba-9b7f-486d-b93e-447eaaa08f5a" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+
+                /* Sidebar Styles */
+        .sidebar {
+              position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    background-color: black;
+    border: 1px solid #444;
+            
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    /* transform: translateX(-250px); */
+    transition: transform 0.3s ease-in-out;
+    color: white;
+    margin-top: 50px;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 101;
+            background-color: #1f2937;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: #e63946;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            margin-top: 40px;
+            border-bottom: 1px solid #2d3748;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-header h2 {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .sidebar-content {
+            padding: 20px 0;
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #9ca3af;
+            padding: 0 20px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .sidebar-menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            color: #d1d5db;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .sidebar-menu-item:hover {
+            background-color: #1f2937;
+            color: white;
+            border-left: 3px solid #e63946;
+        }
+
+        .sidebar-menu-item.active {
+            background-color: #1f2937;
+            color: white;
+            border-left: 3px solid #e63946;
+        }
+
+        .sidebar-menu-item svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        .sidebar-menu-item span {
+            font-size: 0.95rem;
+        }
+
+        .main-content-shifted {
+            margin-left: 250px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-content-shifted {
+                margin-left: 0;
+            }
+        }
+
+        /* Animation for sidebar items */
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-menu-item {
+            animation: fadeInLeft 0.3s ease forwards;
+            opacity: 0;
+        }
+
+        .sidebar-menu-item:nth-child(1) { animation-delay: 0.1s; }
+        .sidebar-menu-item:nth-child(2) { animation-delay: 0.2s; }
+        .sidebar-menu-item:nth-child(3) { animation-delay: 0.3s; }
+        .sidebar-menu-item:nth-child(4) { animation-delay: 0.4s; }
+        .sidebar-menu-item:nth-child(5) { animation-delay: 0.5s; }
+
+        /* Adjust footer when sidebar is open */
+        .sidebar.active ~ .footer-links {
+            width: calc(100% - 250px);
+            margin-left: 250px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar.active ~ .footer-links {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+
+        /* Badge for new items */
+        .badge-new {
+            background-color: #e63946;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+        
+        .footer-links {
+              text-align: center;
+    margin-top: 200px;
+    padding: 20px 0;
+    position: fixed;
+    bottom: 0;
+    place-content: center;
+    /* left: 50%; */
+    display: flex
+;
+    /* right: 50%; */
+    justify-content: center;
+    width: 100%;
+    background: black;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            margin: 8px 12px;
+            padding: 10px 20px;
+            color: white;
+            border: 2px solid #e63946;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: #e63946;
+            color: white;
+        }
+
+        /* Styles for Discovery Tab */
+        .discovery-section {
+            margin-bottom: 6rem;
+        }
+
+        .discovery-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .stock-card {
+            background-color: #1f2937;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-card span {
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+
+        .stock-card .positive {
+            color: #22c55e;
+        }
+
+        .stock-card .negative {
+            color: #ef4444;
+        }
+    </style>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4650463573348937" crossorigin="anonymous"></script>
+</head>
+<body class="text-white">
+    <nav class="navbar">
+        <div class="navbar-container">
+            <h1 class="navbar-logo">TrackMoney</h1>
+            <div class="navbar-actions">
+                <button class="navbar-btn" id="signInBtn" onclick="toggleSignInOverlay()">Sign In</button>
+                <button class="navbar-icon" onclick="toggleSearchOverlay()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m2.85-5.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+       <!-- Sidebar Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="24" height="24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>TrackMoney</h2>
+        </div>
+        <div class="sidebar-content">
+            <!-- Market Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Market</div>
+                <div class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                    </svg>
+                    <span>Indices</span>
+                </div>
+                <div class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                    </svg>
+                    <span>Trending Stocks</span>
+                    <span class="badge-new">Hot</span>
+                </div>
+                <div class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+                    </svg>
+                    <span>Sectors</span>
+                </div>
+            </div>
+
+            <!-- Opportunities Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Opportunities</div>
+                <div class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                    </svg>
+                    <span>Deals</span>
+                </div>
+                <div class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>IPO</span>
+                    <span class="badge-new">New</span>
+                </div>
+            </div>
+
+            <!-- Portfolio Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Your Portfolio</div>
+                <div class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
+                    <span>Watchlist</span>
+                </div>
+                <div class="sidebar-menu-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
+                    </svg>
+                    <span>Performance</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign In Overlay -->
+    <div class="sign-in-overlay" id="signInOverlay">
+        <div class="sign-in-form">
+            <h2>Sign In</h2>
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button class="sign-in-btn" onclick="handleSignIn()">Sign In</button>
+        </div>
+    </div>
+
+    <!-- Landing Page (Shown if not signed in) -->
+    <div class="landing-page" id="landingPage">
+        <h1 class="landing-title">Welcome to TrackMoney</h1>
+        <p class="landing-subtitle">Your ultimate tool to track, analyze, and profit from stock trading with real-time insights.</p>
+        <a href="#" class="landing-btn" onclick="toggleSignInOverlay()">Get Started</a>
+    </div>
+
+    <!-- Main App Content (Shown after sign in) -->
+    <div id="appContent" class="hidden">
+        <!-- Splash Screen -->
+        <div class="splash-screen" id="splashScreen">
+            <div class="splash-logo">
+                <div class="logo-symbol">
+                    <div class="logo-circle"></div>
+                    <div class="splash-icon">
+                        <div class="logo-text">TrackMoney</div>
+                    </div>
+                </div>
+            </div>
+            <div class="splash-subtitle">Track. Analyze. Profit.</div>
+        </div>
+
+        <!-- Loader -->
+        <div class="loader-container" id="loaderContainer">
+            <span class="loader"></span>
+        </div>
+
+        <!-- Search Overlay -->
+        <div id="searchOverlay" class="search-overlay">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold">Search</h2>
+                <button class="text-gray-400" onclick="toggleSearchOverlay()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <input type="text" placeholder="Search..." onkeyup="updateSearch(event)" class="w-full p-2 bg-gray-800 text-white rounded">
+            <p id="searchMessage" class="text-gray-400 mt-2">Search your activity ex (profit,loss,name,status)</p>
+            <div id="activityListI" class="activity-list"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex flex-col items-center mt-8 p-4 tab-container">
+            <div class="flex flex-wrap justify-center gap-4">
+                <button class="tab-button active" onclick="openTab('discovery', this)">Discovery</button>
+                <button class="tab-button" onclick="openTab('intraday', this)">Intraday</button>
+                <button class="tab-button" onclick="openTab('holding', this)">Holding</button>
+                <button class="tab-button" onclick="window.location.replace('/news.html')">News</button>
+                <button class="tab-button" onclick="openTab('activity', this)">Activity</button>
+            </div>
+        </div>
+
+        <!-- Discovery Tab -->
+        <div id="discovery" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center">
+            <div class="w-[500px]">
+                <div class="discovery-section" id="topGainers">
+                    <h3>Top Gainers</h3>
+                    <div id="topGainersList"></div>
+                </div>
+                <div class="discovery-section" id="topLosers">
+                    <h3>Top Losers</h3>
+                    <div id="topLosersList"></div>
+                </div>
+                <div class="discovery-section" id="popularStocks">
+                    <h3>Popular Stocks</h3>
+                    <div id="popularStocksList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Intraday Tab -->
+        <div id="intraday" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center hidden">
+            <div class="w-[500px]">
+                <div class="w-[450px] mb-2.5 flex justify-end items-center">
+                    <button class="new-button" onmousedown="this.style.transform='scale(0.9)';" onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';" onclick="toggleTradePanel('intraday')">
+                        New Trade
+                    </button>
+                </div>
+                <div class="info-section">
+                    <span class="t-sec"><b>Invested</b><div></div><b class="mt-1">₹0.00</b></span>
+                    <span><div class="t-sec"><b>Current</b><div></div><b class="mt-1">₹0.00</b></div></span>
+                    <span><div class="t-sec"><b>Total P/L</b><div></div><b class="mt-1">₹0.00 (0%)</b></div></span>
+                </div>
+                <div class="activity-section" id="intradayActivity"></div>
+            </div>
+        </div>
+
+        <!-- Holding Tab -->
+        <div id="holding" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center hidden">
+            <div class="w-[500px]">
+                <div class="w-[450px] mb-2.5 flex justify-end items-center">
+                    <button class="new-button" onmousedown="this.style.transform='scale(0.9)';" onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';" onclick="toggleTradePanel('holding')">
+                        Add Holding
+                    </button>
+                </div>
+                <div class="info-section">
+                    <span class="t-sec"><b>Invested</b><div></div><b class="mt-1">₹0.00</b></span>
+                    <span><div class="t-sec"><b>Current</b><div></div><b class="mt-1">₹0.00</b></div></span>
+                    <span><div class="t-sec"><b>Total P/L</b><div></div><b class="mt-1">₹0.00 (0%)</b></div></span>
+                </div>
+                <div class="activity-section" id="holdingActivity"></div>
+            </div>
+        </div>
+
+        <!-- US Stocks Tab -->
+        <div id="usStocks" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center hidden">
+            <div class="w-[500px]">
+                <div class="w-[450px] mb-2.5 flex justify-end items-center">
+                    <button class="new-button" onmousedown="this.style.transform='scale(0.9)';" onmouseup="this.style.transform='scale(1)';" onmouseleave="this.style.transform='scale(1)';" onclick="toggleUSTradePanel('usStocks')">
+                        Add US Stock
+                    </button>
+                </div>
+                <div class="info-section">
+                    <span class="t-sec"><b>Invested</b><div></div><b class="mt-1">$0.00</b></span>
+                    <span><div class="t-sec"><b>Current</b><div></div><b class="mt-1">$0.00</b></div></span>
+                    <span><div class="t-sec"><b>Total P/L</b><div></div><b class="mt-1">$0.00 (0%)</b></div></span>
+                </div>
+                <div class="activity-section" id="usStocksActivity"></div>
+            </div>
+        </div>
+
+        <!-- Activity Tab -->
+        <div id="activity" class="tab-content p-4 w-full items-center flex flex-col justify-center align-center hidden">
+            <div class="w-[500px]">
+                <div class="info-section">
+                    <span class="t-sec"><b>Total Trades</b><div></div><b class="mt-1">0</b></span>
+                    <span><div class="t-sec"><b>Completed</b><div></div><b class="mt-1">0</b></div></span>
+                    <span><div class="t-sec"><b>Net P/L</b><div></div><b class="mt-1">₹0.00 (0%)</b></div></span>
+                </div>
+                <div class="activity-section" id="activityList"></div>
+            </div>
+        </div>
+
+        <!-- Trade Overlay for Indian Stocks (Intraday/Holding) -->
+        <div id="tradeOverlay" class="overlay" onclick="closeTradePanel(event)">
+            <div id="tradePanel" class="trade-panel" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold" id="tradePanelTitle">New Trade</h2>
+                </div>
+                <form id="tradeForm" class="space-y-4">
+                    <div class="input-group flex-1">
+                        <label class="block text-sm font-medium mb-2 text-gray-300">Stock Symbol</label>
+                        <div class="relative">
+                            <input type="text" id="stockSymbol" placeholder="e.g., RELIANCE" class="search-input w-full" required onkeyup="callapi(event)" autocomplete="off">
+                        </div>
+                    </div>
+                    <div id="searchResultsContainer" class="search-results-container absolute hidden">
+                        <ul id="searchResults" class="py-1"></ul>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Quantity</label>
+                            <input type="number" id="quantity" placeholder="Qty" class="search-input w-full" required min="1">
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Latest Price</label>
+                            <input type="text" id="price" placeholder="Auto" class="search-input w-full" disabled>
+                        </div>
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Buy at Price</label>
+                            <input type="number" id="buyAtPrice" placeholder="Optional" class="search-input w-full" step="0.01">
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Stop Loss</label>
+                            <input type="number" id="stopLoss" placeholder="SL" class="search-input w-full" step="0.01">
+                        </div>
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Target Profit</label>
+                            <input type="number" id="targetProfit" placeholder="TP" class="search-input w-full" step="0.01">
+                        </div>
+                    </div>
+                    <div class="flex gap-4 justify-center mt-6">
+                        <button type="button" class="trade-btn buy-btn" onclick="handleTradeSubmit(document.getElementById('tradePanelTitle').textContent.includes('Holding') ? 'holding' : 'intraday', true)">Buy</button>
+                        <button type="button" class="trade-btn sell-btn" onclick="handleTradeSubmit(document.getElementById('tradePanelTitle').textContent.includes('Holding') ? 'holding' : 'intraday', false)">Sell</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Trade Overlay for US Stocks -->
+        <div id="usTradeOverlay" class="overlay" onclick="closeUSTradePanel(event)">
+            <div id="usTradePanel" class="trade-panel" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold" id="usTradePanelTitle">Add US Stock</h2>
+                </div>
+                <form id="usTradeForm" class="space-y-4">
+                    <div class="input-group flex-1">
+                        <label class="block text-sm font-medium mb-2 text-gray-300">Stock Symbol</label>
+                        <div class="relative">
+                            <input type="text" id="usStockSymbol" placeholder="e.g., AAPL" class="search-input w-full" required onkeyup="callUSApi(event)" autocomplete="off">
+                        </div>
+                    </div>
+                    <div id="usSearchResultsContainer" class="search-results-container absolute hidden">
+                        <ul id="usSearchResults" class="py-1"></ul>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Quantity</label>
+                            <input type="number" id="usQuantity" placeholder="Qty" class="search-input w-full" required min="1">
+                        </div>
+                    </div>
+                    <div class="flex
+                    gap-4">
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Latest Price</label>
+                            <input type="text" id="usPrice" placeholder="Auto" class="search-input w-full" disabled>
+                        </div>
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Buy at Price</label>
+                            <input type="number" id="usBuyAtPrice" placeholder="Optional" class="search-input w-full" step="0.01">
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Stop Loss</label>
+                            <input type="number" id="usStopLoss" placeholder="SL" class="search-input w-full" step="0.01">
+                        </div>
+                        <div class="input-group flex-1">
+                            <label class="block text-sm font-medium mb-2 text-gray-300">Target Profit</label>
+                            <input type="number" id="usTargetProfit" placeholder="TP" class="search-input w-full" step="0.01">
+                        </div>
+                    </div>
+                    <div class="flex gap-4 justify-center mt-6">
+                        <button type="button" class="trade-btn buy-btn" onclick="handleUSTradeSubmit('usStocks', true)">Buy</button>
+                        <button type="button" class="trade-btn sell-btn" onclick="handleUSTradeSubmit('usStocks', false)">Sell</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-links">
+        <a href="/about.html" class="nav-btn">About Us</a>
+        <a href="/privacy.html" class="nav-btn">Privacy Policy</a>
+        <a href="/terms.html" class="nav-btn">Terms and Conditions</a>
+        <a href="/contact.html" class="nav-btn">Contact Us</a>
+    </div>
+
+    <script src="script.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YG7Q4JJLH9"></script>
+    <script type="text/javascript" id="zohoapptics">var d=document,s=d.createElement("script");s.type="text/javascript";s.id="zohoappticsscript";s.defer=!0;s.src="https://apptics.zoho.in/sdk/web/v1/60040814392/undefined/init?aaID=undefined";var t=d.getElementsByTagName("script")[0];t.parentNode.insertBefore(s,t);window.appticsReady=function(s){var e=window.apptics__asyncalls=window.apptics__asyncalls||[];window.appticsReadyStatus?(s&&e.push(s),e.forEach(s=>s&&s()),window.apptics__asyncalls=null):s&&e.push(s)};</script>
+    <!-- Google tag (gtag.js) -->
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-YG7Q4JJLH9');
+    </script>
+</body>
+</html>
+
+
+   
