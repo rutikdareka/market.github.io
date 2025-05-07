@@ -11,6 +11,172 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
+
+                /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background-color: #111827;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transform: translateX(-250px);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 101;
+            background-color: #1f2937;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: #e63946;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            margin-top: 40px;
+            border-bottom: 1px solid #2d3748;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-header h2 {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .sidebar-content {
+            padding: 20px 0;
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #9ca3af;
+            padding: 0 20px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .sidebar-menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            color: #d1d5db;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .sidebar-menu-item:hover {
+            background-color: #1f2937;
+            color: white;
+            border-left: 3px solid #e63946;
+        }
+
+        .sidebar-menu-item.active {
+            background-color: #1f2937;
+            color: white;
+            border-left: 3px solid #e63946;
+        }
+
+        .sidebar-menu-item svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        .sidebar-menu-item span {
+            font-size: 0.95rem;
+        }
+
+        .main-content-shifted {
+            margin-left: 250px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-content-shifted {
+                margin-left: 0;
+            }
+        }
+
+        /* Animation for sidebar items */
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-menu-item {
+            animation: fadeInLeft 0.3s ease forwards;
+            opacity: 0;
+        }
+
+        .sidebar-menu-item:nth-child(1) { animation-delay: 0.1s; }
+        .sidebar-menu-item:nth-child(2) { animation-delay: 0.2s; }
+        .sidebar-menu-item:nth-child(3) { animation-delay: 0.3s; }
+        .sidebar-menu-item:nth-child(4) { animation-delay: 0.4s; }
+        .sidebar-menu-item:nth-child(5) { animation-delay: 0.5s; }
+
+        /* Adjust footer when sidebar is open */
+        .sidebar.active ~ .footer-links {
+            width: calc(100% - 250px);
+            margin-left: 250px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar.active ~ .footer-links {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+
+        /* Badge for new items */
+        .badge-new {
+            background-color: #e63946;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+        
         .footer-links {
               text-align: center;
     margin-top: 200px;
